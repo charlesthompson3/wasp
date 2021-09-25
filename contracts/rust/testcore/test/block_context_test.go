@@ -26,5 +26,7 @@ func TestBasicBlockContext2(t *testing.T) {
 	v.Params.VarName().SetValue("atTheEndKey")
 	v.Func.Call()
 	require.NoError(t, ctx.Err)
-	require.EqualValues(t, "atTheEndValue", v.Results.Vars().GetString("atTheEndKey").Value())
+	value := v.Results.Vars().GetString("atTheEndKey")
+	require.True(t, value.Exists())
+	require.EqualValues(t, "atTheEndValue", value.Value())
 }

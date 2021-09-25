@@ -69,7 +69,7 @@ func NewSoloContextForChain(t *testing.T, chain *solo.Chain, creator *SoloAgent,
 	ctx := &SoloContext{scName: scName, Chain: chain, creator: creator}
 	var keyPair *ed25519.KeyPair
 	if creator != nil {
-		keyPair = creator.pair
+		keyPair = creator.Pair
 	}
 	ctx.Err = deploy(chain, keyPair, scName, onLoad, init...)
 	if ctx.Err != nil {
@@ -207,15 +207,26 @@ func (ctx *SoloContext) NewSoloAgent() *SoloAgent {
 	return NewSoloAgent(ctx.Chain.Env)
 }
 
+// TODO add context methods that are identical to func context methods
+// which means that ContractCreator needs to change
+
+// ContractCreator returns a SoloAgent representing the contract creator
+func (ctx *SoloContext) ContractCreator() *SoloAgent {
+	if ctx.creator != nil {
+		return ctx.creator
+	}
+	return ctx.Originator()
+}
+
 // Originator returns a SoloAgent representing the chain originator
 func (ctx *SoloContext) Originator() *SoloAgent {
 	c := ctx.Chain
-	return &SoloAgent{env: c.Env, pair: c.OriginatorKeyPair, address: c.OriginatorAddress}
+	return &SoloAgent{Env: c.Env, Pair: c.OriginatorKeyPair, address: c.OriginatorAddress}
 }
 
 // Sign is used to force a different agent for signing a Post() request
-func (ctx *SoloContext) Sign(agent *SoloAgent) *SoloContext {
-	ctx.keyPair = agent.pair
+func (ctx *SoloContext) Sign(agent *SoloAgent) wasmlib.ScFuncCallContext {
+	ctx.keyPair = agent.Pair
 	return ctx
 }
 

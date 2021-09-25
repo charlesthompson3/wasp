@@ -11,37 +11,38 @@ func TestGetSet(t *testing.T) { run2(t, testGetSet) }
 func testGetSet(t *testing.T, w bool) {
 	ctx := setupTest(t, w)
 
-	si := testcore.ScFuncs.SetInt(ctx)
-	si.Params.Name().SetValue("ppp")
-	si.Params.IntValue().SetValue(314)
-	si.Func.TransferIotas(1).Post()
+	f := testcore.ScFuncs.SetInt(ctx)
+	f.Params.Name().SetValue("ppp")
+	f.Params.IntValue().SetValue(314)
+	f.Func.TransferIotas(1).Post()
 	require.NoError(t, ctx.Err)
 
-	gi := testcore.ScFuncs.GetInt(ctx)
-	gi.Params.Name().SetValue("ppp")
-	gi.Func.Call()
+	v := testcore.ScFuncs.GetInt(ctx)
+	v.Params.Name().SetValue("ppp")
+	v.Func.Call()
 	require.NoError(t, ctx.Err)
-	ppp := gi.Results.Values().GetInt64("ppp")
-	require.True(t, ppp.Exists())
-	require.EqualValues(t, 314, ppp.Value())
+	value := v.Results.Values().GetInt64("ppp")
+	require.True(t, value.Exists())
+	require.EqualValues(t, 314, value.Value())
 }
 
 func TestCallRecursive(t *testing.T) { run2(t, testCallRecursive) }
 func testCallRecursive(t *testing.T, w bool) {
 	ctx := setupTest(t, w)
 
-	coc := testcore.ScFuncs.CallOnChain(ctx)
-	coc.Params.IntValue().SetValue(31)
-	coc.Params.HnameContract().SetValue(testcore.HScName)
-	coc.Params.HnameEP().SetValue(testcore.HFuncRunRecursion)
-	coc.Func.TransferIotas(1).Post()
+	f := testcore.ScFuncs.CallOnChain(ctx)
+	f.Params.IntValue().SetValue(31)
+	f.Params.HnameContract().SetValue(testcore.HScName)
+	f.Params.HnameEP().SetValue(testcore.HFuncRunRecursion)
+	f.Func.TransferIotas(1).Post()
 	require.NoError(t, ctx.Err)
 
-	gc := testcore.ScFuncs.GetCounter(ctx)
-	gc.Func.Call()
+	v := testcore.ScFuncs.GetCounter(ctx)
+	v.Func.Call()
 	require.NoError(t, ctx.Err)
-	require.True(t, gc.Results.Counter().Exists())
-	require.EqualValues(t, 32, gc.Results.Counter().Value())
+	counter := v.Results.Counter()
+	require.True(t, counter.Exists())
+	require.EqualValues(t, 32, counter.Value())
 }
 
 const n = 10
@@ -57,30 +58,33 @@ func TestCallFibonacci(t *testing.T) { run2(t, testCallFibonacci) }
 func testCallFibonacci(t *testing.T, w bool) {
 	ctx := setupTest(t, w)
 
-	fib := testcore.ScFuncs.Fibonacci(ctx)
-	fib.Params.IntValue().SetValue(n)
-	fib.Func.Call()
+	f := testcore.ScFuncs.Fibonacci(ctx)
+	f.Params.IntValue().SetValue(n)
+	f.Func.Call()
 	require.NoError(t, ctx.Err)
-	require.True(t, fib.Results.IntValue().Exists())
-	require.EqualValues(t, fibo(n), fib.Results.IntValue().Value())
+	result := f.Results.IntValue()
+	require.True(t, result.Exists())
+	require.EqualValues(t, fibo(n), result.Value())
 }
 
 func TestCallFibonacciIndirect(t *testing.T) { run2(t, testCallFibonacciIndirect) }
 func testCallFibonacciIndirect(t *testing.T, w bool) {
 	ctx := setupTest(t, w)
 
-	fib := testcore.ScFuncs.CallOnChain(ctx)
-	fib.Params.IntValue().SetValue(n)
-	fib.Params.HnameContract().SetValue(testcore.HScName)
-	fib.Params.HnameEP().SetValue(testcore.HViewFibonacci)
-	fib.Func.TransferIotas(1).Post()
+	f := testcore.ScFuncs.CallOnChain(ctx)
+	f.Params.IntValue().SetValue(n)
+	f.Params.HnameContract().SetValue(testcore.HScName)
+	f.Params.HnameEP().SetValue(testcore.HViewFibonacci)
+	f.Func.TransferIotas(1).Post()
 	require.NoError(t, ctx.Err)
-	require.True(t, fib.Results.IntValue().Exists())
-	require.EqualValues(t, fibo(n), fib.Results.IntValue().Value())
+	result := f.Results.IntValue()
+	require.True(t, result.Exists())
+	require.EqualValues(t, fibo(n), result.Value())
 
-	gc := testcore.ScFuncs.GetCounter(ctx)
-	gc.Func.Call()
+	v := testcore.ScFuncs.GetCounter(ctx)
+	v.Func.Call()
 	require.NoError(t, ctx.Err)
-	require.True(t, gc.Results.Counter().Exists())
-	require.EqualValues(t, 1, gc.Results.Counter().Value())
+	counter := v.Results.Counter()
+	require.True(t, counter.Exists())
+	require.EqualValues(t, 1, counter.Value())
 }

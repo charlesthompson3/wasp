@@ -8,7 +8,6 @@ import (
 	"github.com/iotaledger/wasp/packages/vm/wasmlib"
 
 	"github.com/iotaledger/goshimmer/packages/ledgerstate/utxoutil"
-	"github.com/iotaledger/wasp/packages/iscp"
 	"github.com/iotaledger/wasp/packages/kv/codec"
 	"github.com/iotaledger/wasp/packages/solo"
 	"github.com/iotaledger/wasp/packages/vm/core/testcore/sbtests/sbtestsc"
@@ -17,8 +16,8 @@ import (
 
 func TestMainCallsFromFullEP(t *testing.T) { run2(t, testMainCallsFromFullEP) }
 func testMainCallsFromFullEP(t *testing.T, w bool) {
-	ctx := setupTest(t, w)
-	user := ctx.NewSoloAgent()
+	ctx := setupTest(t, w, true)
+	user := ctx.ContractCreator()
 
 	f := testcore.ScFuncs.CheckContextFromFullEP(ctx.Sign(user))
 	chainID := ctx.Convertor.ScChainID(ctx.Chain.ChainID)
@@ -26,46 +25,40 @@ func testMainCallsFromFullEP(t *testing.T, w bool) {
 	f.Params.AgentID().SetValue(wasmlib.NewScAgentID(chainID, testcore.HScName))
 	f.Params.Caller().SetValue(user.ScAgentID())
 	f.Params.ChainOwnerID().SetValue(ctx.Originator().ScAgentID())
-	f.Params.ContractCreator().SetValue(ctx.Originator().ScAgentID())
+	f.Params.ContractCreator().SetValue(user.ScAgentID())
 	f.Func.TransferIotas(1).Post()
 	require.NoError(t, ctx.Err)
-
-	//_, chain := setupChain(t, nil)
-	//
-	//user, _, userAgentID := setupDeployer(t, chain)
-	//
-	//setupTestSandboxSC(t, chain, user, w)
-	//
-	//req := solo.NewCallParams(ScName, sbtestsc.FuncCheckContextFromFullEP.Name,
-	//	sbtestsc.ParamChainID, chain.ChainID,
-	//	sbtestsc.ParamAgentID, iscp.NewAgentID(chain.ChainID.AsAddress(), HScName),
-	//	sbtestsc.ParamCaller, userAgentID,
-	//	sbtestsc.ParamChainOwnerID, chain.OriginatorAgentID,
-	//	sbtestsc.ParamContractCreator, userAgentID,
-	//).WithIotas(1)
-	//_, err := chain.PostRequestSync(req, user)
-	//require.NoError(t, err)
 }
 
 func TestMainCallsFromViewEP(t *testing.T) { run2(t, testMainCallsFromViewEP) }
 func testMainCallsFromViewEP(t *testing.T, w bool) {
-	_, chain := setupChain(t, nil)
+	ctx := setupTest(t, w, true)
+	user := ctx.ContractCreator()
 
-	user, _, userAgentID := setupDeployer(t, chain)
-
-	setupTestSandboxSC(t, chain, user, w)
-
-	_, err := chain.CallView(ScName, sbtestsc.FuncCheckContextFromViewEP.Name,
-		sbtestsc.ParamChainID, chain.ChainID,
-		sbtestsc.ParamAgentID, iscp.NewAgentID(chain.ChainID.AsAddress(), HScName),
-		sbtestsc.ParamChainOwnerID, chain.OriginatorAgentID,
-		sbtestsc.ParamContractCreator, userAgentID,
-	)
-	require.NoError(t, err)
+	f := testcore.ScFuncs.CheckContextFromViewEP(ctx)
+	chainID := ctx.Convertor.ScChainID(ctx.Chain.ChainID)
+	f.Params.ChainID().SetValue(chainID)
+	f.Params.AgentID().SetValue(wasmlib.NewScAgentID(chainID, testcore.HScName))
+	f.Params.ChainOwnerID().SetValue(ctx.Originator().ScAgentID())
+	f.Params.ContractCreator().SetValue(user.ScAgentID())
+	f.Func.Call()
+	require.NoError(t, ctx.Err)
 }
 
 func TestMintedSupplyOk(t *testing.T) { run2(t, testMintedSupplyOk) }
 func testMintedSupplyOk(t *testing.T, w bool) {
+	//ctx := setupTest(t, w, true)
+	//user := ctx.ContractCreator()
+	//
+	//f := testcore.ScFuncs.GetMintedSupply(ctx.Sign(user))
+	//chainID := ctx.Convertor.ScChainID(ctx.Chain.ChainID)
+	//f.Params.ChainID().SetValue(chainID)
+	//f.Params.AgentID().SetValue(wasmlib.NewScAgentID(chainID, testcore.HScName))
+	//f.Params.ChainOwnerID().SetValue(ctx.Originator().ScAgentID())
+	//f.Params.ContractCreator().SetValue(user.ScAgentID())
+	//f.Func.Call()
+	//require.NoError(t, ctx.Err)
+
 	_, chain := setupChain(t, nil)
 
 	user, userAddress, _ := setupDeployer(t, chain)
