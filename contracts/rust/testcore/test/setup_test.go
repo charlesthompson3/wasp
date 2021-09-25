@@ -15,6 +15,7 @@ import (
 	"github.com/iotaledger/wasp/packages/vm/core/testcore/sbtests/sbtestsc"
 	"github.com/iotaledger/wasp/packages/vm/wasmhost"
 	"github.com/iotaledger/wasp/packages/vm/wasmlib"
+	"github.com/iotaledger/wasp/packages/vm/wasmlib/corecontracts/coreroot"
 	"github.com/iotaledger/wasp/packages/vm/wasmproc"
 	"github.com/iotaledger/wasp/packages/vm/wasmsolo"
 	"github.com/stretchr/testify/require"
@@ -63,15 +64,27 @@ func filterKeys(params ...interface{}) []interface{} {
 	return params
 }
 
-func setupTest(t *testing.T, runWasm bool) *wasmsolo.SoloContext {
+func setupTest(t *testing.T, runWasm bool, addCreator ...bool) *wasmsolo.SoloContext {
 	chain := wasmsolo.StartChain(t, "chain1")
 	if !runWasm {
 		chain.Env.WithNativeContract(sbtestsc.Processor)
 		err := chain.DeployContract(nil, testcore.ScName, sbtestsc.Contract.ProgramHash)
 		require.NoError(t, err)
 	}
+
+	var creator *wasmsolo.SoloAgent
+	if len(addCreator) != 0 && addCreator[0] {
+		creator = wasmsolo.NewSoloAgent(chain.Env)
+
+		ctxRoot := wasmsolo.NewSoloContextForRoot(t, chain, coreroot.ScName, coreroot.OnLoad)
+		grant := coreroot.ScFuncs.GrantDeployPermission(ctxRoot)
+		grant.Params.Deployer().SetValue(creator.ScAgentID())
+		grant.Func.TransferIotas(1).Post()
+		require.NoError(t, ctxRoot.Err)
+	}
+
 	wasmsolo.SoloHost = nil
-	ctx := wasmsolo.NewSoloContextForChain(t, chain, testcore.ScName, testcore.OnLoad)
+	ctx := wasmsolo.NewSoloContextForChain(t, chain, creator, testcore.ScName, testcore.OnLoad)
 	return ctx
 }
 

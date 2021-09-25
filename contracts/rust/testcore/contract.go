@@ -58,6 +58,14 @@ type SetIntCall struct {
 	Params MutableSetIntParams
 }
 
+type TestBlockContext1Call struct {
+	Func *wasmlib.ScFunc
+}
+
+type TestBlockContext2Call struct {
+	Func *wasmlib.ScFunc
+}
+
 type TestCallPanicFullEPCall struct {
 	Func *wasmlib.ScFunc
 }
@@ -113,6 +121,12 @@ type GetIntCall struct {
 	Func    *wasmlib.ScView
 	Params  MutableGetIntParams
 	Results ImmutableGetIntResults
+}
+
+type GetStringValueCall struct {
+	Func    *wasmlib.ScView
+	Params  MutableGetStringValueParams
+	Results ImmutableGetStringValueResults
 }
 
 type JustViewCall struct {
@@ -200,6 +214,14 @@ func (sc Funcs) SetInt(ctx wasmlib.ScFuncCallContext) *SetIntCall {
 	return f
 }
 
+func (sc Funcs) TestBlockContext1(ctx wasmlib.ScFuncCallContext) *TestBlockContext1Call {
+	return &TestBlockContext1Call{Func: wasmlib.NewScFunc(ctx, HScName, HFuncTestBlockContext1)}
+}
+
+func (sc Funcs) TestBlockContext2(ctx wasmlib.ScFuncCallContext) *TestBlockContext2Call {
+	return &TestBlockContext2Call{Func: wasmlib.NewScFunc(ctx, HScName, HFuncTestBlockContext2)}
+}
+
 func (sc Funcs) TestCallPanicFullEP(ctx wasmlib.ScFuncCallContext) *TestCallPanicFullEPCall {
 	return &TestCallPanicFullEPCall{Func: wasmlib.NewScFunc(ctx, HScName, HFuncTestCallPanicFullEP)}
 }
@@ -258,6 +280,12 @@ func (sc Funcs) GetCounter(ctx wasmlib.ScViewCallContext) *GetCounterCall {
 
 func (sc Funcs) GetInt(ctx wasmlib.ScViewCallContext) *GetIntCall {
 	f := &GetIntCall{Func: wasmlib.NewScView(ctx, HScName, HViewGetInt)}
+	f.Func.SetPtrs(&f.Params.id, &f.Results.id)
+	return f
+}
+
+func (sc Funcs) GetStringValue(ctx wasmlib.ScViewCallContext) *GetStringValueCall {
+	f := &GetStringValueCall{Func: wasmlib.NewScView(ctx, HScName, HViewGetStringValue)}
 	f.Func.SetPtrs(&f.Params.id, &f.Results.id)
 	return f
 }

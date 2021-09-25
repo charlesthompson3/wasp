@@ -7,6 +7,7 @@ use crate::*;
 use crate::contract::*;
 
 const CONTRACT_NAME_DEPLOYED: &str = "exampleDeployTR";
+const MSG_CORE_ONLY_PANIC: &str = "========== core only =========";
 const MSG_FULL_PANIC: &str = "========== panic FULL ENTRY POINT =========";
 const MSG_VIEW_PANIC: &str = "========== panic VIEW =========";
 
@@ -208,4 +209,16 @@ pub fn view_test_sandbox_call(ctx: &ScViewContext, f: &TestSandboxCallContext) {
     let get_chain_info = corecontracts::coregovernance::ScFuncs::get_chain_info(ctx);
     get_chain_info.func.call();
     f.results.sandbox_call().set_value(&get_chain_info.results.description().value());
+}
+
+pub fn func_test_block_context1(_ctx: &ScFuncContext, _f: &TestBlockContext1Context) {
+    ctx.panic(MSG_CORE_ONLY_PANIC);
+}
+
+pub fn func_test_block_context2(_ctx: &ScFuncContext, _f: &TestBlockContext2Context) {
+    ctx.panic(MSG_CORE_ONLY_PANIC);
+}
+
+pub fn view_get_string_value(_ctx: &ScViewContext, _f: &GetStringValueContext) {
+    ctx.panic(MSG_CORE_ONLY_PANIC);
 }

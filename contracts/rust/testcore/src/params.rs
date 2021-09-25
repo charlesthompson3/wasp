@@ -417,6 +417,28 @@ impl MutableGetIntParams {
 }
 
 #[derive(Clone, Copy)]
+pub struct ImmutableGetStringValueParams {
+    pub(crate) id: i32,
+}
+
+impl ImmutableGetStringValueParams {
+    pub fn var_name(&self) -> ScImmutableString {
+        ScImmutableString::new(self.id, idx_map(IDX_PARAM_VAR_NAME))
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct MutableGetStringValueParams {
+    pub(crate) id: i32,
+}
+
+impl MutableGetStringValueParams {
+    pub fn var_name(&self) -> ScMutableString {
+        ScMutableString::new(self.id, idx_map(IDX_PARAM_VAR_NAME))
+    }
+}
+
+#[derive(Clone, Copy)]
 pub struct ImmutablePassTypesViewParams {
     pub(crate) id: i32,
 }

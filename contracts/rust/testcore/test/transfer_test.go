@@ -9,7 +9,6 @@ import (
 	"github.com/iotaledger/wasp/packages/vm/core/accounts"
 	"github.com/iotaledger/wasp/packages/vm/core/governance"
 	"github.com/iotaledger/wasp/packages/vm/core/testcore/sbtests/sbtestsc"
-	"github.com/iotaledger/wasp/packages/vm/wasmlib/corecontracts/coreroot"
 	"github.com/iotaledger/wasp/packages/vm/wasmsolo"
 	"github.com/stretchr/testify/require"
 )
@@ -69,14 +68,7 @@ func testDoNothingUser(t *testing.T, w bool) {
 func TestWithdrawToAddress(t *testing.T) { run2(t, testWithdrawToAddress) }
 func testWithdrawToAddress(t *testing.T, w bool) {
 	ctx := setupTest(t, w)
-
 	user := ctx.NewSoloAgent()
-
-	ctxRoot := wasmsolo.NewSoloContextForRoot(t, ctx.Chain, coreroot.ScName, coreroot.OnLoad)
-	grant := coreroot.ScFuncs.GrantDeployPermission(ctxRoot)
-	grant.Params.Deployer().SetValue(user.ScAgentID())
-	grant.Func.TransferIotas(1).Post()
-	require.NoError(t, ctxRoot.Err)
 
 	nop := testcore.ScFuncs.DoNothing(ctx.Sign(user))
 	nop.Func.TransferIotas(42).Post()
@@ -88,8 +80,8 @@ func testWithdrawToAddress(t *testing.T, w bool) {
 
 	require.EqualValues(t, 0, ctx.Balance(ctx.Originator()))
 	require.EqualValues(t, 0, ctx.Balance(user))
-	originatorBalanceReducedBy(ctx, w, 1)
-	chainAccountBalances(ctx, w, 3, 45)
+	originatorBalanceReducedBy(ctx, w, 0)
+	chainAccountBalances(ctx, w, 2, 44)
 
 	// send entire contract balance back to user
 	// note that that includes the token that we transfer here
@@ -104,12 +96,15 @@ func testWithdrawToAddress(t *testing.T, w bool) {
 
 	require.EqualValues(t, 0, ctx.Balance(ctx.Originator()))
 	require.EqualValues(t, 0, ctx.Balance(user))
-	originatorBalanceReducedBy(ctx, w, 1+1)
-	chainAccountBalances(ctx, w, 3, 3)
+	originatorBalanceReducedBy(ctx, w, 1)
+	chainAccountBalances(ctx, w, 2, 2)
 }
 
 func TestDoPanicUser(t *testing.T) { run2(t, testDoPanicUser) }
 func testDoPanicUser(t *testing.T, w bool) {
+	// ctx := setupTest(t, w)
+	// user := setupDeployUser(t, ctx)
+
 	env, chain := setupChain(t, nil)
 	cAID, extraToken := setupTestSandboxSC(t, chain, nil, w)
 	user, userAddress, userAgentID := setupDeployer(t, chain)

@@ -3,7 +3,9 @@ package test
 import (
 	"testing"
 
+	"github.com/iotaledger/wasp/contracts/rust/testcore"
 	"github.com/iotaledger/wasp/packages/iscp/colored"
+	"github.com/iotaledger/wasp/packages/vm/wasmlib"
 
 	"github.com/iotaledger/goshimmer/packages/ledgerstate/utxoutil"
 	"github.com/iotaledger/wasp/packages/iscp"
@@ -15,21 +17,34 @@ import (
 
 func TestMainCallsFromFullEP(t *testing.T) { run2(t, testMainCallsFromFullEP) }
 func testMainCallsFromFullEP(t *testing.T, w bool) {
-	_, chain := setupChain(t, nil)
+	ctx := setupTest(t, w)
+	user := ctx.NewSoloAgent()
 
-	user, _, userAgentID := setupDeployer(t, chain)
+	f := testcore.ScFuncs.CheckContextFromFullEP(ctx.Sign(user))
+	chainID := ctx.Convertor.ScChainID(ctx.Chain.ChainID)
+	f.Params.ChainID().SetValue(chainID)
+	f.Params.AgentID().SetValue(wasmlib.NewScAgentID(chainID, testcore.HScName))
+	f.Params.Caller().SetValue(user.ScAgentID())
+	f.Params.ChainOwnerID().SetValue(ctx.Originator().ScAgentID())
+	f.Params.ContractCreator().SetValue(ctx.Originator().ScAgentID())
+	f.Func.TransferIotas(1).Post()
+	require.NoError(t, ctx.Err)
 
-	setupTestSandboxSC(t, chain, user, w)
-
-	req := solo.NewCallParams(ScName, sbtestsc.FuncCheckContextFromFullEP.Name,
-		sbtestsc.ParamChainID, chain.ChainID,
-		sbtestsc.ParamAgentID, iscp.NewAgentID(chain.ChainID.AsAddress(), HScName),
-		sbtestsc.ParamCaller, userAgentID,
-		sbtestsc.ParamChainOwnerID, chain.OriginatorAgentID,
-		sbtestsc.ParamContractCreator, userAgentID,
-	).WithIotas(1)
-	_, err := chain.PostRequestSync(req, user)
-	require.NoError(t, err)
+	//_, chain := setupChain(t, nil)
+	//
+	//user, _, userAgentID := setupDeployer(t, chain)
+	//
+	//setupTestSandboxSC(t, chain, user, w)
+	//
+	//req := solo.NewCallParams(ScName, sbtestsc.FuncCheckContextFromFullEP.Name,
+	//	sbtestsc.ParamChainID, chain.ChainID,
+	//	sbtestsc.ParamAgentID, iscp.NewAgentID(chain.ChainID.AsAddress(), HScName),
+	//	sbtestsc.ParamCaller, userAgentID,
+	//	sbtestsc.ParamChainOwnerID, chain.OriginatorAgentID,
+	//	sbtestsc.ParamContractCreator, userAgentID,
+	//).WithIotas(1)
+	//_, err := chain.PostRequestSync(req, user)
+	//require.NoError(t, err)
 }
 
 func TestMainCallsFromViewEP(t *testing.T) { run2(t, testMainCallsFromViewEP) }

@@ -29,20 +29,21 @@ const (
 	IdxParamName            = 16
 	IdxParamString          = 17
 	IdxParamStringZero      = 18
-	IdxResultChainOwnerID   = 19
-	IdxResultCounter        = 20
-	IdxResultIntValue       = 21
-	IdxResultMintedColor    = 22
-	IdxResultMintedSupply   = 23
-	IdxResultSandboxCall    = 24
-	IdxStateCounter         = 25
-	IdxStateHnameEP         = 26
-	IdxStateInts            = 27
-	IdxStateMintedColor     = 28
-	IdxStateMintedSupply    = 29
+	IdxParamVarName         = 19
+	IdxResultChainOwnerID   = 20
+	IdxResultCounter        = 21
+	IdxResultIntValue       = 22
+	IdxResultMintedColor    = 23
+	IdxResultMintedSupply   = 24
+	IdxResultSandboxCall    = 25
+	IdxStateCounter         = 26
+	IdxStateHnameEP         = 27
+	IdxStateInts            = 28
+	IdxStateMintedColor     = 29
+	IdxStateMintedSupply    = 30
 )
 
-const keyMapLen = 30
+const keyMapLen = 31
 
 var keyMap = [keyMapLen]wasmlib.Key{
 	ParamAddress,
@@ -64,6 +65,7 @@ var keyMap = [keyMapLen]wasmlib.Key{
 	ParamName,
 	ParamString,
 	ParamStringZero,
+	ParamVarName,
 	ResultChainOwnerID,
 	ResultCounter,
 	ResultIntValue,

@@ -12,6 +12,7 @@ import (
 
 const (
 	ContractNameDeployed = "exampleDeployTR"
+	MsgCoreOnlyPanic     = "========== core only ========="
 	MsgFullPanic         = "========== panic FULL ENTRY POINT ========="
 	MsgViewPanic         = "========== panic VIEW ========="
 )
@@ -223,4 +224,19 @@ func viewTestSandboxCall(ctx wasmlib.ScViewContext, f *TestSandboxCallContext) {
 	getChainInfo := coregovernance.ScFuncs.GetChainInfo(ctx)
 	getChainInfo.Func.Call()
 	f.Results.SandboxCall().SetValue(getChainInfo.Results.Description().Value())
+}
+
+//nolint:unparam
+func funcTestBlockContext1(ctx wasmlib.ScFuncContext, f *TestBlockContext1Context) {
+	ctx.Panic(MsgCoreOnlyPanic)
+}
+
+//nolint:unparam
+func funcTestBlockContext2(ctx wasmlib.ScFuncContext, f *TestBlockContext2Context) {
+	ctx.Panic(MsgCoreOnlyPanic)
+}
+
+//nolint:unparam
+func viewGetStringValue(ctx wasmlib.ScViewContext, f *GetStringValueContext) {
+	ctx.Panic(MsgCoreOnlyPanic)
 }

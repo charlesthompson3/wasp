@@ -29,6 +29,7 @@ const (
 type SoloContext struct {
 	Chain     *solo.Chain
 	Convertor SoloConvertor
+	creator   *SoloAgent
 	Err       error
 	keyPair   *ed25519.KeyPair
 	scName    string
@@ -50,7 +51,7 @@ var (
 // Unless you want to use a different chain than the default "chain1" this will be your
 // function of choice to set up a smart contract for your tests
 func NewSoloContext(t *testing.T, scName string, onLoad func(), init ...*wasmlib.ScInitFunc) *SoloContext {
-	ctx := NewSoloContextForChain(t, nil, scName, onLoad, init...)
+	ctx := NewSoloContextForChain(t, nil, nil, scName, onLoad, init...)
 	require.NoError(t, ctx.Err)
 	return ctx
 }
@@ -60,13 +61,17 @@ func NewSoloContext(t *testing.T, scName string, onLoad func(), init ...*wasmlib
 // It takes the scName and onLoad() function for the contract and optionally
 // an init.Func initialized with the parameters to pass to the contract's init() function.
 // You can check for any error that occurred by checking the ctx.Err member.
-func NewSoloContextForChain(t *testing.T, chain *solo.Chain, scName string, onLoad func(), init ...*wasmlib.ScInitFunc) *SoloContext {
+func NewSoloContextForChain(t *testing.T, chain *solo.Chain, creator *SoloAgent, scName string, onLoad func(), init ...*wasmlib.ScInitFunc) *SoloContext {
 	if chain == nil {
 		chain = StartChain(t, "chain1")
 	}
 
-	ctx := &SoloContext{scName: scName, Chain: chain}
-	ctx.Err = deploy(chain, scName, onLoad, init...)
+	ctx := &SoloContext{scName: scName, Chain: chain, creator: creator}
+	var keyPair *ed25519.KeyPair
+	if creator != nil {
+		keyPair = creator.pair
+	}
+	ctx.Err = deploy(chain, keyPair, scName, onLoad, init...)
 	if ctx.Err != nil {
 		return ctx
 	}
@@ -82,7 +87,7 @@ func NewSoloContextForRoot(t *testing.T, chain *solo.Chain, scName string, onLoa
 	return ctx.init(onLoad)
 }
 
-func deploy(chain *solo.Chain, scName string, onLoad func(), init ...*wasmlib.ScInitFunc) error {
+func deploy(chain *solo.Chain, keyPair *ed25519.KeyPair, scName string, onLoad func(), init ...*wasmlib.ScInitFunc) error {
 	var params []interface{}
 	if len(init) != 0 {
 		params = init[0].Params()
@@ -108,11 +113,11 @@ func deploy(chain *solo.Chain, scName string, onLoad func(), init ...*wasmlib.Sc
 	SoloHost = nil
 	if *GoDebug {
 		wasmproc.GoWasmVM = wasmhost.NewWasmGoVM(scName, onLoad)
-		hprog, err := chain.UploadWasm(nil, []byte("go:"+scName))
+		hprog, err := chain.UploadWasm(keyPair, []byte("go:"+scName))
 		if err != nil {
 			return err
 		}
-		return chain.DeployContract(nil, scName, hprog, params...)
+		return chain.DeployContract(keyPair, scName, hprog, params...)
 	}
 
 	// wasmproc.GoWasmVM = NewWasmTimeJavaVM()
@@ -123,7 +128,7 @@ func deploy(chain *solo.Chain, scName string, onLoad func(), init ...*wasmlib.Sc
 	if exists {
 		wasmFile = "../pkg/" + wasmFile
 	}
-	return chain.DeployWasmContract(nil, scName, wasmFile, params...)
+	return chain.DeployWasmContract(keyPair, scName, wasmFile, params...)
 }
 
 // StartChain starts a new chain named chainName.

@@ -345,6 +345,22 @@ func (s MutableGetIntParams) Name() wasmlib.ScMutableString {
 	return wasmlib.NewScMutableString(s.id, idxMap[IdxParamName])
 }
 
+type ImmutableGetStringValueParams struct {
+	id int32
+}
+
+func (s ImmutableGetStringValueParams) VarName() wasmlib.ScImmutableString {
+	return wasmlib.NewScImmutableString(s.id, idxMap[IdxParamVarName])
+}
+
+type MutableGetStringValueParams struct {
+	id int32
+}
+
+func (s MutableGetStringValueParams) VarName() wasmlib.ScMutableString {
+	return wasmlib.NewScMutableString(s.id, idxMap[IdxParamVarName])
+}
+
 type ImmutablePassTypesViewParams struct {
 	id int32
 }

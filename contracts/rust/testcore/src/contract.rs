@@ -66,6 +66,14 @@ pub struct SetIntCall {
     pub params: MutableSetIntParams,
 }
 
+pub struct TestBlockContext1Call {
+    pub func: ScFunc,
+}
+
+pub struct TestBlockContext2Call {
+    pub func: ScFunc,
+}
+
 pub struct TestCallPanicFullEPCall {
     pub func: ScFunc,
 }
@@ -121,6 +129,12 @@ pub struct GetIntCall {
     pub func:    ScView,
     pub params:  MutableGetIntParams,
     pub results: ImmutableGetIntResults,
+}
+
+pub struct GetStringValueCall {
+    pub func:    ScView,
+    pub params:  MutableGetStringValueParams,
+    pub results: ImmutableGetStringValueResults,
 }
 
 pub struct JustViewCall {
@@ -227,6 +241,16 @@ impl ScFuncs {
         f.func.set_ptrs(&mut f.params.id, ptr::null_mut());
         f
     }
+    pub fn test_block_context1(_ctx: & dyn ScFuncCallContext) -> TestBlockContext1Call {
+        TestBlockContext1Call {
+            func: ScFunc::new(HSC_NAME, HFUNC_TEST_BLOCK_CONTEXT1),
+        }
+    }
+    pub fn test_block_context2(_ctx: & dyn ScFuncCallContext) -> TestBlockContext2Call {
+        TestBlockContext2Call {
+            func: ScFunc::new(HSC_NAME, HFUNC_TEST_BLOCK_CONTEXT2),
+        }
+    }
     pub fn test_call_panic_full_ep(_ctx: & dyn ScFuncCallContext) -> TestCallPanicFullEPCall {
         TestCallPanicFullEPCall {
             func: ScFunc::new(HSC_NAME, HFUNC_TEST_CALL_PANIC_FULL_EP),
@@ -306,6 +330,15 @@ impl ScFuncs {
             func:    ScView::new(HSC_NAME, HVIEW_GET_INT),
             params:  MutableGetIntParams { id: 0 },
             results: ImmutableGetIntResults { id: 0 },
+        };
+        f.func.set_ptrs(&mut f.params.id, &mut f.results.id);
+        f
+    }
+    pub fn get_string_value(_ctx: & dyn ScViewCallContext) -> GetStringValueCall {
+        let mut f = GetStringValueCall {
+            func:    ScView::new(HSC_NAME, HVIEW_GET_STRING_VALUE),
+            params:  MutableGetStringValueParams { id: 0 },
+            results: ImmutableGetStringValueResults { id: 0 },
         };
         f.func.set_ptrs(&mut f.params.id, &mut f.results.id);
         f

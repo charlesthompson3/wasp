@@ -101,6 +101,10 @@
       "params": {
         "chainID=chainID": "ChainID"
       }
+    },
+    "testBlockContext1": {
+    },
+    "testBlockContext2": {
     }
   },
   "views": {
@@ -154,7 +158,7 @@
     },
     "testChainOwnerIDView": {
       "results": {
-        "chainOwnerID=chainOwnerID": "AgentID"
+        "chainOwnerID": "AgentID"
       }
     },
     "testPanicViewEP": {
@@ -162,6 +166,14 @@
     "testSandboxCall": {
       "results": {
         "sandboxCall": "String"
+      }
+    },
+    "getStringValue": {
+      "params": {
+        "varName": "String"
+      },
+      "results": {
+        "vars=this": "[String]String"
       }
     }
   }
