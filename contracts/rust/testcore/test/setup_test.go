@@ -68,10 +68,8 @@ func setupTest(t *testing.T, runWasm bool, addCreator ...bool) *wasmsolo.SoloCon
 	chain := wasmsolo.StartChain(t, "chain1")
 
 	var creator *wasmsolo.SoloAgent
-	var pair *ed25519.KeyPair
 	if len(addCreator) != 0 && addCreator[0] {
 		creator = wasmsolo.NewSoloAgent(chain.Env)
-		pair = creator.Pair
 
 		ctxRoot := wasmsolo.NewSoloContextForCore(t, chain, coreroot.ScName, coreroot.OnLoad)
 		grant := coreroot.ScFuncs.GrantDeployPermission(ctxRoot)
@@ -80,8 +78,16 @@ func setupTest(t *testing.T, runWasm bool, addCreator ...bool) *wasmsolo.SoloCon
 		require.NoError(t, ctxRoot.Err)
 	}
 
+	return setupTestForChain(t, runWasm, chain, creator)
+}
+
+func setupTestForChain(t *testing.T, runWasm bool, chain *solo.Chain, creator *wasmsolo.SoloAgent) *wasmsolo.SoloContext {
 	if !runWasm {
 		chain.Env.WithNativeContract(sbtestsc.Processor)
+		var pair *ed25519.KeyPair
+		if creator != nil {
+			pair = creator.Pair
+		}
 		err := chain.DeployContract(pair, testcore.ScName, sbtestsc.Contract.ProgramHash)
 		require.NoError(t, err)
 	}

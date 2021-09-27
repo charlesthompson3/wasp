@@ -145,11 +145,22 @@ func deploy(chain *solo.Chain, keyPair *ed25519.KeyPair, scName string, onLoad f
 }
 
 // StartChain starts a new chain named chainName.
-func StartChain(t *testing.T, chainName string) *solo.Chain {
+func StartChain(t *testing.T, chainName string, env ...*solo.Solo) *solo.Chain {
 	wasmhost.HostTracing = TraceHost
 	// wasmhost.ExtendedHostTracing = TraceHost
-	env := solo.New(t, Debug, StackTrace)
-	return env.NewChain(nil, chainName)
+
+	var soloEnv *solo.Solo
+	if len(env) != 0 {
+		soloEnv = env[0]
+	}
+	if soloEnv == nil {
+		soloEnv = solo.New(t, Debug, StackTrace)
+	}
+	return soloEnv.NewChain(nil, chainName)
+}
+
+func (ctx *SoloContext) AccountID() wasmlib.ScAgentID {
+	return ctx.Agent().ScAgentID()
 }
 
 // AdvanceClockBy is used to forward the internal clock by the provided step duration.
@@ -157,17 +168,21 @@ func (ctx *SoloContext) AdvanceClockBy(step time.Duration) {
 	ctx.Chain.Env.AdvanceClockBy(step)
 }
 
+// Agent returns a SoloAgent for the smart contract associated with ctx
+func (ctx *SoloContext) Agent() *SoloAgent {
+	return &SoloAgent{
+		Env:     ctx.Chain.Env,
+		Pair:    nil,
+		address: ctx.Chain.ChainID.AsAddress(),
+		hname:   iscp.Hn(ctx.scName),
+	}
+}
+
 // Balance returns the account balance of the specified agent on the chain associated with ctx.
-// To return the account balance of the contract associated with ctx use nil as agent.
 // The optional color parameter can be used to retrieve the balance for the specific color.
 // When color is omitted, wasmlib.IOTA is assumed.
 func (ctx *SoloContext) Balance(agent *SoloAgent, color ...wasmlib.ScColor) int64 {
-	var account *iscp.AgentID
-	if agent == nil {
-		account = iscp.NewAgentID(ctx.Chain.ChainID.AsAddress(), iscp.Hn(ctx.scName))
-	} else {
-		account = iscp.NewAgentID(agent.address, 0)
-	}
+	account := iscp.NewAgentID(agent.address, agent.hname)
 	balances := ctx.Chain.GetAccountBalance(account)
 	switch len(color) {
 	case 0:
@@ -180,6 +195,10 @@ func (ctx *SoloContext) Balance(agent *SoloAgent, color ...wasmlib.ScColor) int6
 		require.Fail(ctx.Chain.Env.T, "too many color arguments")
 		return 0
 	}
+}
+
+func (ctx *SoloContext) ChainID() wasmlib.ScChainID {
+	return ctx.Convertor.ScChainID(ctx.Chain.ChainID)
 }
 
 // ContractExists checks to see if the contract named scName exists in the chain associated with ctx.

@@ -36,7 +36,7 @@ func TestOffLedgerFailNoAccount(t *testing.T) {
 		user := ctx.NewSoloAgent()
 		require.EqualValues(t, solo.Saldo, user.Balance())
 		require.EqualValues(t, 0, ctx.Balance(user))
-		require.EqualValues(t, 0, ctx.Balance(nil))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 
 		// no deposit yet, so account is unverified
 
@@ -50,7 +50,7 @@ func TestOffLedgerFailNoAccount(t *testing.T) {
 		t.Logf("dump accounts:\n%s", ctx.Chain.DumpAccounts())
 		require.EqualValues(t, solo.Saldo, user.Balance())
 		require.EqualValues(t, 0, ctx.Balance(user))
-		require.EqualValues(t, 0, ctx.Balance(nil))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 		chainAccountBalances(ctx, w, 2, 2)
 	})
 }
@@ -63,12 +63,12 @@ func TestOffLedgerNoFeeNoTransfer(t *testing.T) {
 		user := ctx.NewSoloAgent()
 		require.EqualValues(t, solo.Saldo, user.Balance())
 		require.EqualValues(t, 0, ctx.Balance(user))
-		require.EqualValues(t, 0, ctx.Balance(nil))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 
 		deposit(t, ctx, user, 10)
 		require.EqualValues(t, solo.Saldo-10, user.Balance())
 		require.EqualValues(t, 10, ctx.Balance(user))
-		require.EqualValues(t, 0, ctx.Balance(nil))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 		chainAccountBalances(ctx, w, 2, 2+10)
 
 		// Look, Ma! No .TransferIotas() necessary when doing off-ledger request!
@@ -82,7 +82,7 @@ func TestOffLedgerNoFeeNoTransfer(t *testing.T) {
 		t.Logf("dump accounts:\n%s", ctx.Chain.DumpAccounts())
 		require.EqualValues(t, solo.Saldo-10, user.Balance())
 		require.EqualValues(t, 10, ctx.Balance(user))
-		require.EqualValues(t, 0, ctx.Balance(nil))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 		chainAccountBalances(ctx, w, 2, 2+10)
 
 		// verify state update
@@ -102,18 +102,18 @@ func TestOffLedgerFeesEnough(t *testing.T) {
 		user := ctx.NewSoloAgent()
 		require.EqualValues(t, solo.Saldo, user.Balance())
 		require.EqualValues(t, 0, ctx.Balance(user))
-		require.EqualValues(t, 0, ctx.Balance(nil))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 
 		setOwnerFee(t, ctx, 10)
 		require.EqualValues(t, solo.Saldo, user.Balance())
 		require.EqualValues(t, 0, ctx.Balance(user))
-		require.EqualValues(t, 0, ctx.Balance(nil))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 		chainAccountBalances(ctx, w, 3, 3)
 
 		deposit(t, ctx, user, 10)
 		require.EqualValues(t, solo.Saldo-10, user.Balance())
 		require.EqualValues(t, 10, ctx.Balance(user))
-		require.EqualValues(t, 0, ctx.Balance(nil))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 		chainAccountBalances(ctx, w, 3, 3+10)
 
 		// pay enough fees for the request
@@ -124,7 +124,7 @@ func TestOffLedgerFeesEnough(t *testing.T) {
 		t.Logf("dump accounts:\n%s", ctx.Chain.DumpAccounts())
 		require.EqualValues(t, solo.Saldo-10, user.Balance())
 		require.EqualValues(t, 0, ctx.Balance(user))
-		require.EqualValues(t, 0, ctx.Balance(nil))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 		chainAccountBalances(ctx, w, 3+10, 3+10)
 	})
 }
@@ -137,18 +137,18 @@ func TestOffLedgerFeesNotEnough(t *testing.T) {
 		user := ctx.NewSoloAgent()
 		require.EqualValues(t, solo.Saldo, user.Balance())
 		require.EqualValues(t, 0, ctx.Balance(user))
-		require.EqualValues(t, 0, ctx.Balance(nil))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 
 		setOwnerFee(t, ctx, 10)
 		require.EqualValues(t, solo.Saldo, user.Balance())
 		require.EqualValues(t, 0, ctx.Balance(user))
-		require.EqualValues(t, 0, ctx.Balance(nil))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 		chainAccountBalances(ctx, w, 3, 3)
 
 		deposit(t, ctx, user, 9)
 		require.EqualValues(t, solo.Saldo-9, user.Balance())
 		require.EqualValues(t, 9, ctx.Balance(user))
-		require.EqualValues(t, 0, ctx.Balance(nil))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 		chainAccountBalances(ctx, w, 3, 3+9)
 
 		// try to pay enough fees for the request
@@ -160,7 +160,7 @@ func TestOffLedgerFeesNotEnough(t *testing.T) {
 		t.Logf("dump accounts:\n%s", ctx.Chain.DumpAccounts())
 		require.EqualValues(t, solo.Saldo-9, user.Balance())
 		require.EqualValues(t, 0, ctx.Balance(user))
-		require.EqualValues(t, 0, ctx.Balance(nil))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 		chainAccountBalances(ctx, w, 3+9, 3+9)
 	})
 }
@@ -173,18 +173,18 @@ func TestOffLedgerFeesExtra(t *testing.T) {
 		user := ctx.NewSoloAgent()
 		require.EqualValues(t, solo.Saldo, user.Balance())
 		require.EqualValues(t, 0, ctx.Balance(user))
-		require.EqualValues(t, 0, ctx.Balance(nil))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 
 		setOwnerFee(t, ctx, 10)
 		require.EqualValues(t, solo.Saldo, user.Balance())
 		require.EqualValues(t, 0, ctx.Balance(user))
-		require.EqualValues(t, 0, ctx.Balance(nil))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 		chainAccountBalances(ctx, w, 3, 3)
 
 		deposit(t, ctx, user, 11)
 		require.EqualValues(t, solo.Saldo-11, user.Balance())
 		require.EqualValues(t, 11, ctx.Balance(user))
-		require.EqualValues(t, 0, ctx.Balance(nil))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 		chainAccountBalances(ctx, w, 3, 3+11)
 
 		// we have enough fees for the request
@@ -195,7 +195,7 @@ func TestOffLedgerFeesExtra(t *testing.T) {
 		t.Logf("dump accounts:\n%s", ctx.Chain.DumpAccounts())
 		require.EqualValues(t, solo.Saldo-11, user.Balance())
 		require.EqualValues(t, 1, ctx.Balance(user))
-		require.EqualValues(t, 0, ctx.Balance(nil))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 		chainAccountBalances(ctx, w, 3+10, 3+10+1)
 	})
 }
@@ -208,18 +208,18 @@ func TestOffLedgerTransferWithFeesEnough(t *testing.T) {
 		user := ctx.NewSoloAgent()
 		require.EqualValues(t, solo.Saldo, user.Balance())
 		require.EqualValues(t, 0, ctx.Balance(user))
-		require.EqualValues(t, 0, ctx.Balance(nil))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 
 		setOwnerFee(t, ctx, 10)
 		require.EqualValues(t, solo.Saldo, user.Balance())
 		require.EqualValues(t, 0, ctx.Balance(user))
-		require.EqualValues(t, 0, ctx.Balance(nil))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 		chainAccountBalances(ctx, w, 3, 3)
 
 		deposit(t, ctx, user, 10+42)
 		require.EqualValues(t, solo.Saldo-10-42, user.Balance())
 		require.EqualValues(t, 10+42, ctx.Balance(user))
-		require.EqualValues(t, 0, ctx.Balance(nil))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 		chainAccountBalances(ctx, w, 3, 3+10+42)
 
 		// we have enough fees for the request plus transfer
@@ -230,7 +230,7 @@ func TestOffLedgerTransferWithFeesEnough(t *testing.T) {
 		t.Logf("dump accounts:\n%s", ctx.Chain.DumpAccounts())
 		require.EqualValues(t, solo.Saldo-10-42, user.Balance())
 		require.EqualValues(t, 0, ctx.Balance(user))
-		require.EqualValues(t, 42, ctx.Balance(nil))
+		require.EqualValues(t, 42, ctx.Balance(ctx.Agent()))
 		chainAccountBalances(ctx, w, 3+10, 3+10+42)
 	})
 }
@@ -243,18 +243,18 @@ func TestOffLedgerTransferWithFeesNotEnough(t *testing.T) {
 		user := ctx.NewSoloAgent()
 		require.EqualValues(t, solo.Saldo, user.Balance())
 		require.EqualValues(t, 0, ctx.Balance(user))
-		require.EqualValues(t, 0, ctx.Balance(nil))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 
 		setOwnerFee(t, ctx, 10)
 		require.EqualValues(t, solo.Saldo, user.Balance())
 		require.EqualValues(t, 0, ctx.Balance(user))
-		require.EqualValues(t, 0, ctx.Balance(nil))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 		chainAccountBalances(ctx, w, 3, 3)
 
 		deposit(t, ctx, user, 10+41)
 		require.EqualValues(t, solo.Saldo-10-41, user.Balance())
 		require.EqualValues(t, 10+41, ctx.Balance(user))
-		require.EqualValues(t, 0, ctx.Balance(nil))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 		chainAccountBalances(ctx, w, 3, 3+10+41)
 
 		// not enough in account for fee + transfer
@@ -265,7 +265,7 @@ func TestOffLedgerTransferWithFeesNotEnough(t *testing.T) {
 		t.Logf("dump accounts:\n%s", ctx.Chain.DumpAccounts())
 		require.EqualValues(t, solo.Saldo-10-41, user.Balance())
 		require.EqualValues(t, 0, ctx.Balance(user))
-		require.EqualValues(t, 41, ctx.Balance(nil))
+		require.EqualValues(t, 41, ctx.Balance(ctx.Agent()))
 		chainAccountBalances(ctx, w, 3+10, 3+10+41)
 	})
 }
@@ -278,18 +278,18 @@ func TestOffLedgerTransferWithFeesExtra(t *testing.T) {
 		user := ctx.NewSoloAgent()
 		require.EqualValues(t, solo.Saldo, user.Balance())
 		require.EqualValues(t, 0, ctx.Balance(user))
-		require.EqualValues(t, 0, ctx.Balance(nil))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 
 		setOwnerFee(t, ctx, 10)
 		require.EqualValues(t, solo.Saldo, user.Balance())
 		require.EqualValues(t, 0, ctx.Balance(user))
-		require.EqualValues(t, 0, ctx.Balance(nil))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 		chainAccountBalances(ctx, w, 3, 3)
 
 		deposit(t, ctx, user, 10+43)
 		require.EqualValues(t, solo.Saldo-10-43, user.Balance())
 		require.EqualValues(t, 10+43, ctx.Balance(user))
-		require.EqualValues(t, 0, ctx.Balance(nil))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 		chainAccountBalances(ctx, w, 3, 3+10+43)
 
 		// more than enough in account for fee + transfer
@@ -300,7 +300,7 @@ func TestOffLedgerTransferWithFeesExtra(t *testing.T) {
 		t.Logf("dump accounts:\n%s", ctx.Chain.DumpAccounts())
 		require.EqualValues(t, solo.Saldo-10-43, user.Balance())
 		require.EqualValues(t, 1, ctx.Balance(user))
-		require.EqualValues(t, 42, ctx.Balance(nil))
+		require.EqualValues(t, 42, ctx.Balance(ctx.Agent()))
 		chainAccountBalances(ctx, w, 3+10, 3+10+42+1)
 	})
 }
@@ -313,12 +313,12 @@ func TestOffLedgerTransferEnough(t *testing.T) {
 		user := ctx.NewSoloAgent()
 		require.EqualValues(t, solo.Saldo, user.Balance())
 		require.EqualValues(t, 0, ctx.Balance(user))
-		require.EqualValues(t, 0, ctx.Balance(nil))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 
 		deposit(t, ctx, user, 42)
 		require.EqualValues(t, solo.Saldo-42, user.Balance())
 		require.EqualValues(t, 42, ctx.Balance(user))
-		require.EqualValues(t, 0, ctx.Balance(nil))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 		chainAccountBalances(ctx, w, 2, 2+42)
 
 		// pay enough fees for the request
@@ -329,7 +329,7 @@ func TestOffLedgerTransferEnough(t *testing.T) {
 		t.Logf("dump accounts:\n%s", ctx.Chain.DumpAccounts())
 		require.EqualValues(t, solo.Saldo-42, user.Balance())
 		require.EqualValues(t, 0, ctx.Balance(user))
-		require.EqualValues(t, 42, ctx.Balance(nil))
+		require.EqualValues(t, 42, ctx.Balance(ctx.Agent()))
 		chainAccountBalances(ctx, w, 2, 2+42)
 	})
 }
@@ -342,12 +342,12 @@ func TestOffLedgerTransferNotEnough(t *testing.T) {
 		user := ctx.NewSoloAgent()
 		require.EqualValues(t, solo.Saldo, user.Balance())
 		require.EqualValues(t, 0, ctx.Balance(user))
-		require.EqualValues(t, 0, ctx.Balance(nil))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 
 		deposit(t, ctx, user, 41)
 		require.EqualValues(t, solo.Saldo-41, user.Balance())
 		require.EqualValues(t, 41, ctx.Balance(user))
-		require.EqualValues(t, 0, ctx.Balance(nil))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 		chainAccountBalances(ctx, w, 2, 2+41)
 
 		// pay enough fees for the request
@@ -358,7 +358,7 @@ func TestOffLedgerTransferNotEnough(t *testing.T) {
 		t.Logf("dump accounts:\n%s", ctx.Chain.DumpAccounts())
 		require.EqualValues(t, solo.Saldo-41, user.Balance())
 		require.EqualValues(t, 0, ctx.Balance(user))
-		require.EqualValues(t, 41, ctx.Balance(nil))
+		require.EqualValues(t, 41, ctx.Balance(ctx.Agent()))
 		chainAccountBalances(ctx, w, 2, 2+41)
 	})
 }
@@ -371,12 +371,12 @@ func TestOffLedgerTransferExtra(t *testing.T) {
 		user := ctx.NewSoloAgent()
 		require.EqualValues(t, solo.Saldo, user.Balance())
 		require.EqualValues(t, 0, ctx.Balance(user))
-		require.EqualValues(t, 0, ctx.Balance(nil))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 
 		deposit(t, ctx, user, 43)
 		require.EqualValues(t, solo.Saldo-43, user.Balance())
 		require.EqualValues(t, 43, ctx.Balance(user))
-		require.EqualValues(t, 0, ctx.Balance(nil))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 		chainAccountBalances(ctx, w, 2, 2+43)
 
 		// pay enough fees for the request
@@ -387,7 +387,7 @@ func TestOffLedgerTransferExtra(t *testing.T) {
 		t.Logf("dump accounts:\n%s", ctx.Chain.DumpAccounts())
 		require.EqualValues(t, solo.Saldo-43, user.Balance())
 		require.EqualValues(t, 1, ctx.Balance(user))
-		require.EqualValues(t, 42, ctx.Balance(nil))
+		require.EqualValues(t, 42, ctx.Balance(ctx.Agent()))
 		chainAccountBalances(ctx, w, 2, 2+43)
 	})
 }
