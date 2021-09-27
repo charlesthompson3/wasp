@@ -89,6 +89,22 @@ func (s MutableCheckContextFromFullEPParams) ContractCreator() wasmlib.ScMutable
 	return wasmlib.NewScMutableAgentID(s.id, idxMap[IdxParamContractCreator])
 }
 
+type ImmutableInitParams struct {
+	id int32
+}
+
+func (s ImmutableInitParams) Fail() wasmlib.ScImmutableInt64 {
+	return wasmlib.NewScImmutableInt64(s.id, idxMap[IdxParamFail])
+}
+
+type MutableInitParams struct {
+	id int32
+}
+
+func (s MutableInitParams) Fail() wasmlib.ScMutableInt64 {
+	return wasmlib.NewScMutableInt64(s.id, idxMap[IdxParamFail])
+}
+
 type ImmutablePassTypesFullParams struct {
 	id int32
 }

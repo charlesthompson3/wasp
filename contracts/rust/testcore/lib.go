@@ -147,12 +147,16 @@ func funcIncCounterThunk(ctx wasmlib.ScFuncContext) {
 }
 
 type InitContext struct {
-	State MutableTestCoreState
+	Params ImmutableInitParams
+	State  MutableTestCoreState
 }
 
 func funcInitThunk(ctx wasmlib.ScFuncContext) {
 	ctx.Log("testcore.funcInit")
 	f := &InitContext{
+		Params: ImmutableInitParams{
+			id: wasmlib.OBJ_ID_PARAMS,
+		},
 		State: MutableTestCoreState{
 			id: wasmlib.OBJ_ID_STATE,
 		},

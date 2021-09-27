@@ -42,7 +42,8 @@ pub struct IncCounterCall {
 }
 
 pub struct InitCall {
-    pub func: ScInitFunc,
+    pub func:   ScInitFunc,
+    pub params: MutableInitParams,
 }
 
 pub struct PassTypesFullCall {
@@ -204,9 +205,12 @@ impl ScFuncs {
         }
     }
     pub fn init(_ctx: & dyn ScFuncCallContext) -> InitCall {
-        InitCall {
-            func: ScInitFunc::new(HSC_NAME, HFUNC_INIT),
-        }
+        let mut f = InitCall {
+            func:   ScInitFunc::new(HSC_NAME, HFUNC_INIT),
+            params: MutableInitParams { id: 0 },
+        };
+        f.func.set_ptrs(&mut f.params.id, ptr::null_mut());
+        f
     }
     pub fn pass_types_full(_ctx: & dyn ScFuncCallContext) -> PassTypesFullCall {
         let mut f = PassTypesFullCall {

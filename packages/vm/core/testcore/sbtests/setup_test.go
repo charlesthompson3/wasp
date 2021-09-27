@@ -42,9 +42,8 @@ func setupDeployer(t *testing.T, chain *solo.Chain) (*ed25519.KeyPair, ledgersta
 	chain.Env.AssertAddressIotas(userAddr, solo.Saldo)
 
 	req := solo.NewCallParams(root.Contract.Name, root.FuncGrantDeployPermission.Name,
-		root.ParamDeployer, iscp.NewAgentID(userAddr, 0),
-	).WithIotas(1)
-	_, err := chain.PostRequestSync(req, nil)
+		root.ParamDeployer, iscp.NewAgentID(userAddr, 0))
+	_, err := chain.PostRequestSync(req.WithIotas(1), nil)
 	require.NoError(t, err)
 	return user, userAddr, iscp.NewAgentID(userAddr, 0)
 }
@@ -75,8 +74,8 @@ func setupTestSandboxSC(t *testing.T, chain *solo.Chain, user *ed25519.KeyPair, 
 	require.NoError(t, err)
 
 	deployed := iscp.NewAgentID(chain.ChainID.AsAddress(), HScName)
-	req := solo.NewCallParams(ScName, sbtestsc.FuncDoNothing.Name).WithIotas(1)
-	_, err = chain.PostRequestSync(req, user)
+	req := solo.NewCallParams(ScName, sbtestsc.FuncDoNothing.Name)
+	_, err = chain.PostRequestSync(req.WithIotas(1), user)
 	require.NoError(t, err)
 	t.Logf("deployed test_sandbox'%s': %s", ScName, HScName)
 	return deployed, extraToken

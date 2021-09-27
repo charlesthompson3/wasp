@@ -14,8 +14,7 @@ func testChainOwnerIDView(t *testing.T, w bool) {
 	f := testcore.ScFuncs.TestChainOwnerIDView(ctx)
 	f.Func.Call()
 	require.NoError(t, ctx.Err)
-	originator := ctx.Convertor.ScAgentID(ctx.Chain.OriginatorAgentID)
-	require.EqualValues(t, originator, f.Results.ChainOwnerID().Value())
+	require.EqualValues(t, ctx.Originator().ScAgentID(), f.Results.ChainOwnerID().Value())
 }
 
 func TestChainOwnerIDFull(t *testing.T) { run2(t, testChainOwnerIDFull) }
@@ -25,8 +24,7 @@ func testChainOwnerIDFull(t *testing.T, w bool) {
 	f := testcore.ScFuncs.TestChainOwnerIDFull(ctx)
 	f.Func.TransferIotas(1).Post()
 	require.NoError(t, ctx.Err)
-	originator := ctx.Convertor.ScAgentID(ctx.Chain.OriginatorAgentID)
-	require.EqualValues(t, originator, f.Results.ChainOwnerID().Value())
+	require.EqualValues(t, ctx.Originator().ScAgentID(), f.Results.ChainOwnerID().Value())
 }
 
 func TestSandboxCall(t *testing.T) { run2(t, testSandboxCall) }

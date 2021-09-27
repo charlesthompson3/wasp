@@ -169,12 +169,16 @@ fn func_inc_counter_thunk(ctx: &ScFuncContext) {
 }
 
 pub struct InitContext {
-    state: MutableTestCoreState,
+    params: ImmutableInitParams,
+    state:  MutableTestCoreState,
 }
 
 fn func_init_thunk(ctx: &ScFuncContext) {
     ctx.log("testcore.funcInit");
     let f = InitContext {
+        params: ImmutableInitParams {
+            id: OBJ_ID_PARAMS,
+        },
         state: MutableTestCoreState {
             id: OBJ_ID_STATE,
         },

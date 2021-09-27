@@ -74,9 +74,10 @@ func funcIncCounter(ctx wasmlib.ScFuncContext, f *IncCounterContext) {
 	counter.SetValue(counter.Value() + 1)
 }
 
-//nolint:unparam
 func funcInit(ctx wasmlib.ScFuncContext, f *InitContext) {
-	ctx.Log("doing nothing...")
+	if f.Params.Fail().Exists() {
+		ctx.Panic("failing on purpose")
+	}
 }
 
 func funcPassTypesFull(ctx wasmlib.ScFuncContext, f *PassTypesFullContext) {

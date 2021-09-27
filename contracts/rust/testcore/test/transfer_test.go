@@ -13,22 +13,26 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func chainAccountBalances(ctx *wasmsolo.SoloContext, w bool, balance, total uint64) {
+// chainAccountBalances checks the balance of the chain account and the total
+// balance of all accounts, taking any extra uploadWasm() into account
+func chainAccountBalances(ctx *wasmsolo.SoloContext, w bool, chain, total uint64) {
 	if w {
-		// wasm setup takes 1 more iota than core setup
-		balance++
+		// wasm setup takes 1 more iota than core setup due to uploadWasm()
+		chain++
 		total++
 	}
-	ctx.Chain.AssertCommonAccountIotas(balance)
+	ctx.Chain.AssertCommonAccountIotas(chain)
 	ctx.Chain.AssertTotalIotas(total)
 }
 
+// originatorBalanceReducedBy checks the balance of the originator address has
+// reduced by the given amount, taking any extra uploadWasm() into account
 func originatorBalanceReducedBy(ctx *wasmsolo.SoloContext, w bool, minus uint64) {
 	if w {
-		// wasm setup takes 1 more iota than core setup
+		// wasm setup takes 1 more iota than core setup due to uploadWasm()
 		minus++
 	}
-	ctx.Chain.Env.AssertAddressIotas(ctx.Chain.OriginatorAddress, solo.Saldo-solo.ChainDustThreshold-2-minus)
+	ctx.Chain.Env.AssertAddressIotas(ctx.Chain.OriginatorAddress, solo.Saldo-solo.ChainDustThreshold-minus)
 }
 
 func TestDoNothing(t *testing.T) { run2(t, testDoNothing) }
@@ -42,8 +46,8 @@ func testDoNothing(t *testing.T, w bool) {
 	t.Logf("dump accounts:\n%s", ctx.Chain.DumpAccounts())
 	require.EqualValues(t, 42, ctx.Balance(nil))
 	require.EqualValues(t, 0, ctx.Balance(ctx.Originator()))
-	originatorBalanceReducedBy(ctx, w, 42)
-	chainAccountBalances(ctx, w, 2, 44)
+	originatorBalanceReducedBy(ctx, w, 2+42)
+	chainAccountBalances(ctx, w, 2, 2+42)
 }
 
 func TestDoNothingUser(t *testing.T) { run2(t, testDoNothingUser) }
@@ -61,8 +65,8 @@ func testDoNothingUser(t *testing.T, w bool) {
 
 	require.EqualValues(t, 0, ctx.Balance(ctx.Originator()))
 	require.EqualValues(t, 0, ctx.Balance(user))
-	originatorBalanceReducedBy(ctx, w, 0)
-	chainAccountBalances(ctx, w, 2, 44)
+	originatorBalanceReducedBy(ctx, w, 2)
+	chainAccountBalances(ctx, w, 2, 2+42)
 }
 
 func TestWithdrawToAddress(t *testing.T) { run2(t, testWithdrawToAddress) }
@@ -80,8 +84,8 @@ func testWithdrawToAddress(t *testing.T, w bool) {
 
 	require.EqualValues(t, 0, ctx.Balance(ctx.Originator()))
 	require.EqualValues(t, 0, ctx.Balance(user))
-	originatorBalanceReducedBy(ctx, w, 0)
-	chainAccountBalances(ctx, w, 2, 44)
+	originatorBalanceReducedBy(ctx, w, 2)
+	chainAccountBalances(ctx, w, 2, 2+42)
 
 	// send entire contract balance back to user
 	// note that that includes the token that we transfer here
@@ -96,7 +100,7 @@ func testWithdrawToAddress(t *testing.T, w bool) {
 
 	require.EqualValues(t, 0, ctx.Balance(ctx.Originator()))
 	require.EqualValues(t, 0, ctx.Balance(user))
-	originatorBalanceReducedBy(ctx, w, 1)
+	originatorBalanceReducedBy(ctx, w, 2+1)
 	chainAccountBalances(ctx, w, 2, 2)
 }
 

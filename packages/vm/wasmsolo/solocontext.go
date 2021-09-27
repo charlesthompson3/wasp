@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/iotaledger/goshimmer/packages/ledgerstate"
+	"github.com/iotaledger/goshimmer/packages/ledgerstate/utxoutil"
 	"github.com/iotaledger/hive.go/crypto/ed25519"
 	"github.com/iotaledger/wasp/packages/iscp"
 	"github.com/iotaledger/wasp/packages/iscp/colored"
@@ -32,7 +34,10 @@ type SoloContext struct {
 	creator   *SoloAgent
 	Err       error
 	keyPair   *ed25519.KeyPair
+	mint      uint64
+	offLedger bool
 	scName    string
+	Tx        *ledgerstate.Transaction
 	wasmHost  wasmhost.WasmHost
 }
 
@@ -78,7 +83,7 @@ func NewSoloContextForChain(t *testing.T, chain *solo.Chain, creator *SoloAgent,
 	return ctx.init(onLoad)
 }
 
-func NewSoloContextForRoot(t *testing.T, chain *solo.Chain, scName string, onLoad func()) *SoloContext {
+func NewSoloContextForCore(t *testing.T, chain *solo.Chain, scName string, onLoad func()) *SoloContext {
 	if chain == nil {
 		chain = StartChain(t, "chain1")
 	}
@@ -86,6 +91,9 @@ func NewSoloContextForRoot(t *testing.T, chain *solo.Chain, scName string, onLoa
 	ctx := &SoloContext{scName: scName, Chain: chain}
 	return ctx.init(onLoad)
 }
+
+// TODO can we make upload work through off-ledger request instead?
+// that way we can get rid of all the extra token code when checking balances
 
 func deploy(chain *solo.Chain, keyPair *ed25519.KeyPair, scName string, onLoad func(), init ...*wasmlib.ScInitFunc) error {
 	var params []interface{}
@@ -129,6 +137,11 @@ func deploy(chain *solo.Chain, keyPair *ed25519.KeyPair, scName string, onLoad f
 		wasmFile = "../pkg/" + wasmFile
 	}
 	return chain.DeployWasmContract(keyPair, scName, wasmFile, params...)
+	//hprog, err := chain.UploadWasmFromFile(keyPair, wasmFile)
+	//if err != nil {
+	//	return err
+	//}
+	//return chain.DeployContract(keyPair, scName, hprog, params...)
 }
 
 // StartChain starts a new chain named chainName.
@@ -208,7 +221,7 @@ func (ctx *SoloContext) NewSoloAgent() *SoloAgent {
 }
 
 // TODO add context methods that are identical to func context methods
-// which means that ContractCreator needs to change
+// which means that Balances, ContractCreator and Minted need to change
 
 // ContractCreator returns a SoloAgent representing the contract creator
 func (ctx *SoloContext) ContractCreator() *SoloAgent {
@@ -218,6 +231,30 @@ func (ctx *SoloContext) ContractCreator() *SoloAgent {
 	return ctx.Originator()
 }
 
+// Minted returns the color and amount of newly minted tokens
+func (ctx *SoloContext) Minted() (wasmlib.ScColor, uint64) {
+	t := ctx.Chain.Env.T
+	t.Logf("minting request tx: %s", ctx.Tx.ID().Base58())
+	mintedAmounts := colored.BalancesFromL1Map(utxoutil.GetMintedAmounts(ctx.Tx))
+	require.Len(t, mintedAmounts, 1)
+	var mintedColor wasmlib.ScColor
+	var mintedAmount uint64
+	for c := range mintedAmounts {
+		mintedColor = ctx.Convertor.ScColor(c)
+		mintedAmount = mintedAmounts[c]
+		break
+	}
+	t.Logf("Minted: amount = %d color = %s", mintedAmount, mintedColor.String())
+	return mintedColor, mintedAmount
+}
+
+// OffLedger tells SoloContext to Post() the next request off-ledger
+func (ctx *SoloContext) OffLedger(agent *SoloAgent) wasmlib.ScFuncCallContext {
+	ctx.offLedger = true
+	ctx.keyPair = agent.Pair
+	return ctx
+}
+
 // Originator returns a SoloAgent representing the chain originator
 func (ctx *SoloContext) Originator() *SoloAgent {
 	c := ctx.Chain
@@ -225,8 +262,11 @@ func (ctx *SoloContext) Originator() *SoloAgent {
 }
 
 // Sign is used to force a different agent for signing a Post() request
-func (ctx *SoloContext) Sign(agent *SoloAgent) wasmlib.ScFuncCallContext {
+func (ctx *SoloContext) Sign(agent *SoloAgent, mint ...uint64) wasmlib.ScFuncCallContext {
 	ctx.keyPair = agent.Pair
+	if len(mint) != 0 {
+		ctx.mint = mint[0]
+	}
 	return ctx
 }
 

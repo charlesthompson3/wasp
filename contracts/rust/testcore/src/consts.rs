@@ -23,6 +23,7 @@ pub const PARAM_CHAIN_OWNER_ID:   &str = "chainOwnerID";
 pub const PARAM_CONTRACT_CREATOR: &str = "contractCreator";
 pub const PARAM_CONTRACT_ID:      &str = "contractID";
 pub const PARAM_COUNTER:          &str = "counter";
+pub const PARAM_FAIL:             &str = "initFailParam";
 pub const PARAM_HASH:             &str = "Hash";
 pub const PARAM_HNAME:            &str = "Hname";
 pub const PARAM_HNAME_CONTRACT:   &str = "hnameContract";

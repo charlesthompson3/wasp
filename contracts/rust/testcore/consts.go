@@ -24,6 +24,7 @@ const (
 	ParamContractCreator = wasmlib.Key("contractCreator")
 	ParamContractID      = wasmlib.Key("contractID")
 	ParamCounter         = wasmlib.Key("counter")
+	ParamFail            = wasmlib.Key("initFailParam")
 	ParamHash            = wasmlib.Key("Hash")
 	ParamHname           = wasmlib.Key("Hname")
 	ParamHnameContract   = wasmlib.Key("hnameContract")

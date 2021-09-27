@@ -73,7 +73,7 @@ func setupTest(t *testing.T, runWasm bool, addCreator ...bool) *wasmsolo.SoloCon
 		creator = wasmsolo.NewSoloAgent(chain.Env)
 		pair = creator.Pair
 
-		ctxRoot := wasmsolo.NewSoloContextForRoot(t, chain, coreroot.ScName, coreroot.OnLoad)
+		ctxRoot := wasmsolo.NewSoloContextForCore(t, chain, coreroot.ScName, coreroot.OnLoad)
 		grant := coreroot.ScFuncs.GrantDeployPermission(ctxRoot)
 		grant.Params.Deployer().SetValue(creator.ScAgentID())
 		grant.Func.TransferIotas(1).Post()
@@ -88,6 +88,7 @@ func setupTest(t *testing.T, runWasm bool, addCreator ...bool) *wasmsolo.SoloCon
 
 	wasmsolo.SoloHost = nil
 	ctx := wasmsolo.NewSoloContextForChain(t, chain, creator, testcore.ScName, testcore.OnLoad)
+	require.NoError(t, ctx.Err)
 	return ctx
 }
 

@@ -41,6 +41,9 @@
     "incCounter": {
     },
     "init": {
+      "params": {
+        "fail=initFailParam": "?Int64"
+      }
     },
     "passTypesFull": {
       "params": {

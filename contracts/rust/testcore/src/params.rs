@@ -107,6 +107,28 @@ impl MutableCheckContextFromFullEPParams {
 }
 
 #[derive(Clone, Copy)]
+pub struct ImmutableInitParams {
+    pub(crate) id: i32,
+}
+
+impl ImmutableInitParams {
+    pub fn fail(&self) -> ScImmutableInt64 {
+        ScImmutableInt64::new(self.id, idx_map(IDX_PARAM_FAIL))
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct MutableInitParams {
+    pub(crate) id: i32,
+}
+
+impl MutableInitParams {
+    pub fn fail(&self) -> ScMutableInt64 {
+        ScMutableInt64::new(self.id, idx_map(IDX_PARAM_FAIL))
+    }
+}
+
+#[derive(Clone, Copy)]
 pub struct ImmutablePassTypesFullParams {
     pub(crate) id: i32,
 }

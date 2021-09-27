@@ -4,6 +4,7 @@
 package wasmsolo
 
 import (
+	"github.com/iotaledger/goshimmer/packages/ledgerstate"
 	"github.com/iotaledger/wasp/packages/iscp"
 	"github.com/iotaledger/wasp/packages/iscp/colored"
 	"github.com/iotaledger/wasp/packages/kv"
@@ -51,7 +52,7 @@ func (o *SoloScContext) GetObjectID(keyID, typeID int32) int32 {
 		wasmhost.KeyReturn:  func() wasmproc.WaspObject { return wasmproc.NewScDict(&host.KvStoreHost, dict.New()) },
 		// wasmhost.KeyState:     func() wasmproc.WaspObject { return wasmproc.NewScDict(o.host, o.vm.state()) },
 		// wasmhost.KeyTransfers: func() wasmproc.WaspObject { return wasmproc.NewScTransfers(o.vm) },
-		// wasmhost.KeyUtility:   func() wasmproc.WaspObject { return wasmproc.NewScUtility(o.vm) },
+		wasmhost.KeyUtility: func() wasmproc.WaspObject { return wasmproc.NewScUtility(nil) },
 	})
 }
 
@@ -201,11 +202,20 @@ func (o *SoloScContext) postSync(contract, function iscp.Hname, paramsID, transf
 		transfer := o.getTransfer(transferID)
 		req.WithTransfers(transfer)
 	}
+	if o.ctx.mint > 0 {
+		mintAddress := ledgerstate.NewED25519Address(o.ctx.keyPair.PublicKey)
+		req.WithMint(mintAddress, o.ctx.mint)
+	}
+	var res dict.Dict
 	_ = wasmlib.ConnectHost(SoloHost)
-	res, err := o.ctx.Chain.PostRequestSync(req, o.ctx.keyPair)
+	if o.ctx.offLedger {
+		o.ctx.offLedger = false
+		res, o.ctx.Err = o.ctx.Chain.PostRequestOffLedger(req, o.ctx.keyPair)
+	} else {
+		o.ctx.Tx, res, o.ctx.Err = o.ctx.Chain.PostRequestSyncTx(req, o.ctx.keyPair)
+	}
 	_ = wasmlib.ConnectHost(&o.ctx.wasmHost)
-	o.ctx.Err = err
-	if err != nil {
+	if o.ctx.Err != nil {
 		return
 	}
 	returnID := o.GetObjectID(int32(wasmlib.KeyReturn), wasmlib.TYPE_MAP)

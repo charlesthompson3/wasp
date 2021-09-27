@@ -6,6 +6,7 @@ import (
 
 	"github.com/iotaledger/goshimmer/packages/ledgerstate"
 	"github.com/iotaledger/hive.go/crypto/ed25519"
+	"github.com/iotaledger/wasp/contracts/rust/testcore"
 	"github.com/iotaledger/wasp/packages/iscp"
 	"github.com/iotaledger/wasp/packages/kv/kvdecoder"
 	"github.com/iotaledger/wasp/packages/solo"
@@ -15,26 +16,23 @@ import (
 
 func TestCounter(t *testing.T) { run2(t, testCounter) }
 func testCounter(t *testing.T, w bool) {
-	_, chain := setupChain(t, nil)
-	setupTestSandboxSC(t, chain, nil, w)
+	ctx := setupTest(t, w)
 
-	req := solo.NewCallParams(ScName, sbtestsc.FuncIncCounter.Name).WithIotas(1)
+	f := testcore.ScFuncs.IncCounter(ctx)
+	f.Func.TransferIotas(1)
 	for i := 0; i < 33; i++ {
-		_, err := chain.PostRequestSync(req, nil)
-		require.NoError(t, err)
+		f.Func.Post()
+		require.NoError(t, ctx.Err)
 	}
 
-	ret, err := chain.CallView(ScName, sbtestsc.FuncGetCounter.Name)
-	require.NoError(t, err)
-
-	deco := kvdecoder.New(ret, chain.Log)
-	res := deco.MustGetInt64(sbtestsc.VarCounter)
-	require.EqualValues(t, 33, res)
+	v := testcore.ScFuncs.GetCounter(ctx)
+	v.Func.Call()
+	require.NoError(t, ctx.Err)
+	require.EqualValues(t, 33, v.Results.Counter().Value())
 }
 
 func TestConcurrency(t *testing.T) { run2(t, testConcurrency) }
 func testConcurrency(t *testing.T, w bool) {
-	// t.SkipNow()
 	_, chain := setupChain(t, nil)
 	setupTestSandboxSC(t, chain, nil, w)
 
@@ -79,7 +77,6 @@ func testConcurrency(t *testing.T, w bool) {
 
 func TestConcurrency2(t *testing.T) { run2(t, testConcurrency2) }
 func testConcurrency2(t *testing.T, w bool) {
-	// t.SkipNow()
 	_, chain := setupChain(t, nil)
 	setupTestSandboxSC(t, chain, nil, w)
 
