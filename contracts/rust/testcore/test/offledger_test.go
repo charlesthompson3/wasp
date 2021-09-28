@@ -12,9 +12,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func deposit(t *testing.T, ctx *wasmsolo.SoloContext, user *wasmsolo.SoloAgent, amount int64) {
+func deposit(t *testing.T, ctx *wasmsolo.SoloContext, user, target *wasmsolo.SoloAgent, amount int64) {
 	ctxAcc := wasmsolo.NewSoloContextForCore(t, ctx.Chain, coreaccounts.ScName, coreaccounts.OnLoad)
 	d := coreaccounts.ScFuncs.Deposit(ctxAcc.Sign(user))
+	if target != nil {
+		d.Params.AgentID().SetValue(target.ScAgentID())
+	}
 	d.Func.TransferIotas(amount).Post()
 	require.NoError(t, ctxAcc.Err)
 }
@@ -65,7 +68,7 @@ func TestOffLedgerNoFeeNoTransfer(t *testing.T) {
 		require.EqualValues(t, 0, ctx.Balance(user))
 		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 
-		deposit(t, ctx, user, 10)
+		deposit(t, ctx, user, nil, 10)
 		require.EqualValues(t, solo.Saldo-10, user.Balance())
 		require.EqualValues(t, 10, ctx.Balance(user))
 		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
@@ -110,7 +113,7 @@ func TestOffLedgerFeesEnough(t *testing.T) {
 		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 		chainAccountBalances(ctx, w, 3, 3)
 
-		deposit(t, ctx, user, 10)
+		deposit(t, ctx, user, nil, 10)
 		require.EqualValues(t, solo.Saldo-10, user.Balance())
 		require.EqualValues(t, 10, ctx.Balance(user))
 		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
@@ -145,7 +148,7 @@ func TestOffLedgerFeesNotEnough(t *testing.T) {
 		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 		chainAccountBalances(ctx, w, 3, 3)
 
-		deposit(t, ctx, user, 9)
+		deposit(t, ctx, user, nil, 9)
 		require.EqualValues(t, solo.Saldo-9, user.Balance())
 		require.EqualValues(t, 9, ctx.Balance(user))
 		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
@@ -181,7 +184,7 @@ func TestOffLedgerFeesExtra(t *testing.T) {
 		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 		chainAccountBalances(ctx, w, 3, 3)
 
-		deposit(t, ctx, user, 11)
+		deposit(t, ctx, user, nil, 11)
 		require.EqualValues(t, solo.Saldo-11, user.Balance())
 		require.EqualValues(t, 11, ctx.Balance(user))
 		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
@@ -216,7 +219,7 @@ func TestOffLedgerTransferWithFeesEnough(t *testing.T) {
 		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 		chainAccountBalances(ctx, w, 3, 3)
 
-		deposit(t, ctx, user, 10+42)
+		deposit(t, ctx, user, nil, 10+42)
 		require.EqualValues(t, solo.Saldo-10-42, user.Balance())
 		require.EqualValues(t, 10+42, ctx.Balance(user))
 		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
@@ -251,7 +254,7 @@ func TestOffLedgerTransferWithFeesNotEnough(t *testing.T) {
 		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 		chainAccountBalances(ctx, w, 3, 3)
 
-		deposit(t, ctx, user, 10+41)
+		deposit(t, ctx, user, nil, 10+41)
 		require.EqualValues(t, solo.Saldo-10-41, user.Balance())
 		require.EqualValues(t, 10+41, ctx.Balance(user))
 		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
@@ -286,7 +289,7 @@ func TestOffLedgerTransferWithFeesExtra(t *testing.T) {
 		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 		chainAccountBalances(ctx, w, 3, 3)
 
-		deposit(t, ctx, user, 10+43)
+		deposit(t, ctx, user, nil, 10+43)
 		require.EqualValues(t, solo.Saldo-10-43, user.Balance())
 		require.EqualValues(t, 10+43, ctx.Balance(user))
 		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
@@ -315,7 +318,7 @@ func TestOffLedgerTransferEnough(t *testing.T) {
 		require.EqualValues(t, 0, ctx.Balance(user))
 		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 
-		deposit(t, ctx, user, 42)
+		deposit(t, ctx, user, nil, 42)
 		require.EqualValues(t, solo.Saldo-42, user.Balance())
 		require.EqualValues(t, 42, ctx.Balance(user))
 		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
@@ -344,7 +347,7 @@ func TestOffLedgerTransferNotEnough(t *testing.T) {
 		require.EqualValues(t, 0, ctx.Balance(user))
 		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 
-		deposit(t, ctx, user, 41)
+		deposit(t, ctx, user, nil, 41)
 		require.EqualValues(t, solo.Saldo-41, user.Balance())
 		require.EqualValues(t, 41, ctx.Balance(user))
 		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
@@ -373,7 +376,7 @@ func TestOffLedgerTransferExtra(t *testing.T) {
 		require.EqualValues(t, 0, ctx.Balance(user))
 		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
 
-		deposit(t, ctx, user, 43)
+		deposit(t, ctx, user, nil, 43)
 		require.EqualValues(t, solo.Saldo-43, user.Balance())
 		require.EqualValues(t, 43, ctx.Balance(user))
 		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))

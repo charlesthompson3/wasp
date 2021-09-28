@@ -83,6 +83,7 @@ func setupTest(t *testing.T, runWasm bool, addCreator ...bool) *wasmsolo.SoloCon
 
 func setupTestForChain(t *testing.T, runWasm bool, chain *solo.Chain, creator *wasmsolo.SoloAgent) *wasmsolo.SoloContext {
 	if !runWasm {
+		wasmsolo.SoloHost = nil
 		chain.Env.WithNativeContract(sbtestsc.Processor)
 		var pair *ed25519.KeyPair
 		if creator != nil {
