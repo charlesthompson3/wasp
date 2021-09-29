@@ -82,19 +82,13 @@ func setupTest(t *testing.T, runWasm bool, addCreator ...bool) *wasmsolo.SoloCon
 }
 
 func setupTestForChain(t *testing.T, runWasm bool, chain *solo.Chain, creator *wasmsolo.SoloAgent) *wasmsolo.SoloContext {
-	if !runWasm {
-		wasmsolo.SoloHost = nil
-		chain.Env.WithNativeContract(sbtestsc.Processor)
-		var pair *ed25519.KeyPair
-		if creator != nil {
-			pair = creator.Pair
-		}
-		err := chain.DeployContract(pair, testcore.ScName, sbtestsc.Contract.ProgramHash)
-		require.NoError(t, err)
+	if runWasm {
+		ctx := wasmsolo.NewSoloContextForChain(t, chain, creator, testcore.ScName, testcore.OnLoad)
+		require.NoError(t, ctx.Err)
+		return ctx
 	}
 
-	wasmsolo.SoloHost = nil
-	ctx := wasmsolo.NewSoloContextForChain(t, chain, creator, testcore.ScName, testcore.OnLoad)
+	ctx := wasmsolo.NewSoloContextForNative(t, chain, creator, testcore.ScName, testcore.OnLoad, sbtestsc.Processor)
 	require.NoError(t, ctx.Err)
 	return ctx
 }

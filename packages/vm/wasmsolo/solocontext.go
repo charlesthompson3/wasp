@@ -11,11 +11,12 @@ import (
 	"github.com/iotaledger/goshimmer/packages/ledgerstate"
 	"github.com/iotaledger/goshimmer/packages/ledgerstate/utxoutil"
 	"github.com/iotaledger/hive.go/crypto/ed25519"
+	"github.com/iotaledger/wasp/packages/hashing"
 	"github.com/iotaledger/wasp/packages/iscp"
 	"github.com/iotaledger/wasp/packages/iscp/colored"
+	"github.com/iotaledger/wasp/packages/iscp/coreutil"
 	"github.com/iotaledger/wasp/packages/solo"
 	"github.com/iotaledger/wasp/packages/util"
-	"github.com/iotaledger/wasp/packages/vm/core/root"
 	"github.com/iotaledger/wasp/packages/vm/wasmhost"
 	"github.com/iotaledger/wasp/packages/vm/wasmlib"
 	"github.com/iotaledger/wasp/packages/vm/wasmproc"
@@ -29,24 +30,24 @@ const (
 )
 
 type SoloContext struct {
-	Chain     *solo.Chain
-	Convertor SoloConvertor
-	creator   *SoloAgent
-	Err       error
-	keyPair   *ed25519.KeyPair
-	isRequest bool
-	mint      uint64
-	offLedger bool
-	scName    string
-	Tx        *ledgerstate.Transaction
-	wasmHost  wasmhost.WasmHost
+	Chain       *solo.Chain
+	Convertor   SoloConvertor
+	creator     *SoloAgent
+	Err         error
+	keyPair     *ed25519.KeyPair
+	isRequest   bool
+	mint        uint64
+	offLedger   bool
+	scName      string
+	Tx          *ledgerstate.Transaction
+	wasmHost    *wasmhost.WasmHost
+	wasmHostOld wasmlib.ScHost
 }
 
 var (
-	_        wasmlib.ScFuncCallContext = &SoloContext{}
-	_        wasmlib.ScViewCallContext = &SoloContext{}
-	SoloHost wasmlib.ScHost
-	GoDebug  = flag.Bool("godebug", false, "debug go smart contract code")
+	_       wasmlib.ScFuncCallContext = &SoloContext{}
+	_       wasmlib.ScViewCallContext = &SoloContext{}
+	GoDebug                           = flag.Bool("godebug", false, "debug go smart contract code")
 )
 
 // NewSoloContext can be used to create a SoloContext associated with a smart contract with
@@ -77,7 +78,11 @@ func NewSoloContextForChain(t *testing.T, chain *solo.Chain, creator *SoloAgent,
 	if creator != nil {
 		keyPair = creator.Pair
 	}
-	ctx.Err = deploy(chain, keyPair, scName, onLoad, init...)
+	var params []interface{}
+	if len(init) != 0 {
+		params = init[0].Params()
+	}
+	ctx.Err = deploy(chain, keyPair, scName, onLoad, params...)
 	if ctx.Err != nil {
 		return ctx
 	}
@@ -93,33 +98,37 @@ func NewSoloContextForCore(t *testing.T, chain *solo.Chain, scName string, onLoa
 	return ctx.init(onLoad)
 }
 
-// TODO can we make upload work through off-ledger request instead?
-// that way we can get rid of all the extra token code when checking balances
+// NewSoloContextForNative can be used to create a SoloContext associated with a smart contract on a particular chain.
+// When chain is nil the function will start a default chain "chain1" before initializing the smart contract.
+// It takes the scName and onLoad() function for the contract and optionally
+// an init.Func initialized with the parameters to pass to the contract's init() function.
+// You can check for any error that occurred by checking the ctx.Err member.
+func NewSoloContextForNative(t *testing.T, chain *solo.Chain, creator *SoloAgent, scName string, onLoad func(), proc *coreutil.ContractProcessor, init ...*wasmlib.ScInitFunc) *SoloContext {
+	if chain == nil {
+		chain = StartChain(t, "chain1")
+	}
 
-func deploy(chain *solo.Chain, keyPair *ed25519.KeyPair, scName string, onLoad func(), init ...*wasmlib.ScInitFunc) error {
+	ctx := &SoloContext{scName: scName, Chain: chain, creator: creator}
+	var keyPair *ed25519.KeyPair
+	if creator != nil {
+		keyPair = creator.Pair
+	}
 	var params []interface{}
 	if len(init) != 0 {
 		params = init[0].Params()
 	}
-
-	if SoloHost == nil {
-		retDict, err := chain.CallView(root.Contract.Name, root.FuncFindContract.Name,
-			root.ParamHname, iscp.Hn(scName),
-		)
-		if err != nil {
-			return err
-		}
-		retBin, err := retDict.Get(root.ParamContractFound)
-		if err != nil {
-			return err
-		}
-		if len(retBin) == 1 && retBin[0] == 0xff {
-			// a contract with that name already exists: probably native code
-			return nil
-		}
+	chain.Env.WithNativeContract(proc)
+	ctx.Err = chain.DeployContract(keyPair, scName, hashing.HashStrings(scName), params...)
+	if ctx.Err != nil {
+		return ctx
 	}
+	return ctx.init(onLoad)
+}
 
-	SoloHost = nil
+// TODO can we make upload work through off-ledger request instead?
+// that way we can get rid of all the extra token code when checking balances
+
+func deploy(chain *solo.Chain, keyPair *ed25519.KeyPair, scName string, onLoad func(), params ...interface{}) error {
 	if *GoDebug {
 		wasmproc.GoWasmVM = wasmhost.NewWasmGoVM(scName, onLoad)
 		hprog, err := chain.UploadWasm(keyPair, []byte("go:"+scName))
@@ -214,25 +223,23 @@ func (ctx *SoloContext) Host() wasmlib.ScHost {
 
 // init further initializes the SoloContext.
 func (ctx *SoloContext) init(onLoad func()) *SoloContext {
+	ctx.wasmHost = &wasmhost.WasmHost{}
 	ctx.wasmHost.Init(ctx.Chain.Log)
 	ctx.wasmHost.TrackObject(wasmproc.NewNullObject(&ctx.wasmHost.KvStoreHost))
 	ctx.wasmHost.TrackObject(NewSoloScContext(ctx))
-	if SoloHost == nil {
-		SoloHost = wasmlib.ConnectHost(&ctx.wasmHost)
-	}
-	_ = wasmlib.ConnectHost(&ctx.wasmHost)
+	ctx.wasmHostOld = wasmlib.ConnectHost(ctx.wasmHost)
 	onLoad()
 	return ctx
 }
 
 // InitFuncCallContext is a function that is required to use SoloContext as an ScFuncCallContext
 func (ctx *SoloContext) InitFuncCallContext() {
-	_ = wasmlib.ConnectHost(&ctx.wasmHost)
+	_ = wasmlib.ConnectHost(ctx.wasmHost)
 }
 
 // InitViewCallContext is a function that is required to use SoloContext as an ScViewCallContext
 func (ctx *SoloContext) InitViewCallContext() {
-	_ = wasmlib.ConnectHost(&ctx.wasmHost)
+	_ = wasmlib.ConnectHost(ctx.wasmHost)
 }
 
 // NewSoloAgent creates a new SoloAgent with solo.Saldo tokens in its address
@@ -303,9 +310,9 @@ func (ctx *SoloContext) Transfer() wasmlib.ScTransfers {
 // The function will wait for maxWait (default 5 seconds) duration before giving up with a timeout.
 // The function returns the false in case of a timeout.
 func (ctx *SoloContext) WaitForPendingRequests(expectedRequests int, maxWait ...time.Duration) bool {
-	_ = wasmlib.ConnectHost(SoloHost)
+	_ = wasmlib.ConnectHost(ctx.wasmHostOld)
 	info := ctx.Chain.MempoolInfo()
 	result := ctx.Chain.WaitForRequestsThrough(expectedRequests+info.OutPoolCounter, maxWait...)
-	_ = wasmlib.ConnectHost(&ctx.wasmHost)
+	_ = wasmlib.ConnectHost(ctx.wasmHost)
 	return result
 }
