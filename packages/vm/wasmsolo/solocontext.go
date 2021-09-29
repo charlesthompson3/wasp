@@ -34,6 +34,7 @@ type SoloContext struct {
 	creator   *SoloAgent
 	Err       error
 	keyPair   *ed25519.KeyPair
+	isRequest bool
 	mint      uint64
 	offLedger bool
 	scName    string
@@ -248,6 +249,10 @@ func (ctx *SoloContext) ContractCreator() *SoloAgent {
 		return ctx.creator
 	}
 	return ctx.Originator()
+}
+
+func (ctx *SoloContext) EnqueueRequest() {
+	ctx.isRequest = true
 }
 
 // Minted returns the color and amount of newly minted tokens

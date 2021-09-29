@@ -211,8 +211,14 @@ func (o *SoloScContext) postSync(contract, function iscp.Hname, paramsID, transf
 	if o.ctx.offLedger {
 		o.ctx.offLedger = false
 		res, o.ctx.Err = o.ctx.Chain.PostRequestOffLedger(req, o.ctx.keyPair)
-	} else {
+	} else if !o.ctx.isRequest {
 		o.ctx.Tx, res, o.ctx.Err = o.ctx.Chain.PostRequestSyncTx(req, o.ctx.keyPair)
+	} else {
+		o.ctx.isRequest = false
+		o.ctx.Tx, _, o.ctx.Err = o.ctx.Chain.RequestFromParamsToLedger(req, nil)
+		if o.ctx.Err == nil {
+			o.ctx.Chain.Env.EnqueueRequests(o.ctx.Tx)
+		}
 	}
 	_ = wasmlib.ConnectHost(&o.ctx.wasmHost)
 	if o.ctx.Err != nil {
