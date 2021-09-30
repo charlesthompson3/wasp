@@ -228,6 +228,9 @@ func (ctx *SoloContext) init(onLoad func()) *SoloContext {
 	ctx.wasmHost.TrackObject(wasmproc.NewNullObject(&ctx.wasmHost.KvStoreHost))
 	ctx.wasmHost.TrackObject(NewSoloScContext(ctx))
 	ctx.wasmHostOld = wasmlib.ConnectHost(ctx.wasmHost)
+	if ctx.wasmHostOld == nil {
+		ctx.wasmHostOld = &wasmhost.KvStoreHost{}
+	}
 	onLoad()
 	return ctx
 }
