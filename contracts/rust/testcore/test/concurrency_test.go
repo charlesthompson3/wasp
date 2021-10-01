@@ -2,6 +2,7 @@ package test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/iotaledger/wasp/contracts/rust/testcore"
 	"github.com/iotaledger/wasp/packages/solo"
@@ -51,7 +52,7 @@ func TestSynchronous(t *testing.T) {
 		if w {
 			reqs++
 		}
-		require.True(t, ctx.WaitForPendingRequests(-reqs))
+		require.True(t, ctx.WaitForPendingRequests(-reqs, 20*time.Second))
 
 		v := testcore.ScFuncs.GetCounter(ctx)
 		v.Func.Call()
@@ -91,7 +92,7 @@ func TestConcurrency(t *testing.T) {
 				}
 			}(r, n)
 		}
-		require.True(t, ctx.WaitForPendingRequests(sum))
+		require.True(t, ctx.WaitForPendingRequests(sum, 20*time.Second))
 
 		v := testcore.ScFuncs.GetCounter(ctx)
 		v.Func.Call()
@@ -134,7 +135,7 @@ func TestConcurrency2(t *testing.T) {
 			}(r, n)
 		}
 
-		require.True(t, ctx.WaitForPendingRequests(sum))
+		require.True(t, ctx.WaitForPendingRequests(sum, 20*time.Second))
 
 		v := testcore.ScFuncs.GetCounter(ctx)
 		v.Func.Call()
