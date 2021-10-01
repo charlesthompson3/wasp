@@ -56,13 +56,13 @@ func setupTestForChain(t *testing.T, runWasm bool, chain *solo.Chain, creator *w
 func TestSetup1(t *testing.T) {
 	run2(t, func(t *testing.T, w bool) {
 		ctx := setupTest(t, w)
-		require.EqualValues(t, ctx.Originator(), ctx.ContractCreator())
+		require.EqualValues(t, ctx.Originator(), ctx.Creator())
 	})
 }
 
 func TestSetup2(t *testing.T) {
 	run2(t, func(t *testing.T, w bool) {
 		ctx := setupTest(t, w, true)
-		require.NotEqualValues(t, ctx.Originator(), ctx.ContractCreator())
+		require.NotEqualValues(t, ctx.Originator(), ctx.Creator())
 	})
 }

@@ -11,7 +11,7 @@ import (
 func TestMainCallsFromFullEP(t *testing.T) {
 	run2(t, func(t *testing.T, w bool) {
 		ctx := setupTest(t, w, true)
-		user := ctx.ContractCreator()
+		user := ctx.Creator()
 
 		f := testcore.ScFuncs.CheckContextFromFullEP(ctx.Sign(user))
 		f.Params.ChainID().SetValue(ctx.ChainID())
@@ -27,7 +27,7 @@ func TestMainCallsFromFullEP(t *testing.T) {
 func TestMainCallsFromViewEP(t *testing.T) {
 	run2(t, func(t *testing.T, w bool) {
 		ctx := setupTest(t, w, true)
-		user := ctx.ContractCreator()
+		user := ctx.Creator()
 
 		f := testcore.ScFuncs.CheckContextFromViewEP(ctx)
 		f.Params.ChainID().SetValue(ctx.ChainID())
@@ -42,7 +42,7 @@ func TestMainCallsFromViewEP(t *testing.T) {
 func TestMintedSupplyOk(t *testing.T) {
 	run2(t, func(t *testing.T, w bool) {
 		ctx := setupTest(t, w, true)
-		user := ctx.ContractCreator()
+		user := ctx.Creator()
 
 		f := testcore.ScFuncs.GetMintedSupply(ctx.Sign(user, 42))
 		f.Func.TransferIotas(1).Post()

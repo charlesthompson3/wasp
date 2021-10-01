@@ -41,7 +41,7 @@ func TestDoNothing(t *testing.T) {
 		require.NoError(t, ctx.Err)
 
 		t.Logf("dump accounts:\n%s", ctx.Chain.DumpAccounts())
-		require.EqualValues(t, 42, ctx.Balance(ctx.Agent()))
+		require.EqualValues(t, 42, ctx.Balance(ctx.Account()))
 		require.EqualValues(t, 0, ctx.Balance(ctx.Originator()))
 		originatorBalanceReducedBy(ctx, w, 2+42)
 		chainAccountBalances(ctx, w, 2, 2+42)
@@ -59,7 +59,7 @@ func TestDoNothingUser(t *testing.T) {
 
 		t.Logf("dump accounts:\n%s", ctx.Chain.DumpAccounts())
 		require.EqualValues(t, solo.Saldo-42, user.Balance())
-		require.EqualValues(t, 42, ctx.Balance(ctx.Agent()))
+		require.EqualValues(t, 42, ctx.Balance(ctx.Account()))
 		require.EqualValues(t, 0, ctx.Balance(ctx.Originator()))
 		require.EqualValues(t, 0, ctx.Balance(user))
 		originatorBalanceReducedBy(ctx, w, 2)
@@ -78,7 +78,7 @@ func TestWithdrawToAddress(t *testing.T) {
 
 		t.Logf("dump accounts:\n%s", ctx.Chain.DumpAccounts())
 		require.EqualValues(t, solo.Saldo-42, user.Balance())
-		require.EqualValues(t, 42, ctx.Balance(ctx.Agent()))
+		require.EqualValues(t, 42, ctx.Balance(ctx.Account()))
 		require.EqualValues(t, 0, ctx.Balance(ctx.Originator()))
 		require.EqualValues(t, 0, ctx.Balance(user))
 		originatorBalanceReducedBy(ctx, w, 2)
@@ -93,7 +93,7 @@ func TestWithdrawToAddress(t *testing.T) {
 
 		t.Logf("dump accounts:\n%s", ctx.Chain.DumpAccounts())
 		require.EqualValues(t, solo.Saldo-42+42+1, user.Balance())
-		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Account()))
 		require.EqualValues(t, 0, ctx.Balance(ctx.Originator()))
 		require.EqualValues(t, 0, ctx.Balance(user))
 		originatorBalanceReducedBy(ctx, w, 2+1)
@@ -108,7 +108,7 @@ func TestDoPanicUser(t *testing.T) {
 
 		t.Logf("dump accounts:\n%s", ctx.Chain.DumpAccounts())
 		require.EqualValues(t, solo.Saldo, user.Balance())
-		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Account()))
 		require.EqualValues(t, 0, ctx.Balance(ctx.Originator()))
 		require.EqualValues(t, 0, ctx.Balance(user))
 		originatorBalanceReducedBy(ctx, w, 2)
@@ -120,7 +120,7 @@ func TestDoPanicUser(t *testing.T) {
 
 		t.Logf("dump accounts:\n%s", ctx.Chain.DumpAccounts())
 		require.EqualValues(t, solo.Saldo, user.Balance())
-		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Account()))
 		require.EqualValues(t, 0, ctx.Balance(ctx.Originator()))
 		require.EqualValues(t, 0, ctx.Balance(user))
 		originatorBalanceReducedBy(ctx, w, 2)
@@ -135,7 +135,7 @@ func TestDoPanicUserFeeless(t *testing.T) {
 
 		t.Logf("dump accounts:\n%s", ctx.Chain.DumpAccounts())
 		require.EqualValues(t, solo.Saldo, user.Balance())
-		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Account()))
 		require.EqualValues(t, 0, ctx.Balance(ctx.Originator()))
 		require.EqualValues(t, 0, ctx.Balance(user))
 		originatorBalanceReducedBy(ctx, w, 2)
@@ -147,7 +147,7 @@ func TestDoPanicUserFeeless(t *testing.T) {
 
 		t.Logf("dump accounts:\n%s", ctx.Chain.DumpAccounts())
 		require.EqualValues(t, solo.Saldo, user.Balance())
-		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Account()))
 		require.EqualValues(t, 0, ctx.Balance(ctx.Originator()))
 		require.EqualValues(t, 0, ctx.Balance(user))
 		originatorBalanceReducedBy(ctx, w, 2)
@@ -160,7 +160,7 @@ func TestDoPanicUserFeeless(t *testing.T) {
 
 		t.Logf("dump accounts:\n%s", ctx.Chain.DumpAccounts())
 		require.EqualValues(t, solo.Saldo-1, user.Balance())
-		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Account()))
 		require.EqualValues(t, 0, ctx.Balance(ctx.Originator()))
 		require.EqualValues(t, 0, ctx.Balance(user))
 		originatorBalanceReducedBy(ctx, w, 2)
@@ -175,7 +175,7 @@ func TestDoPanicUserFee(t *testing.T) {
 
 		t.Logf("dump accounts:\n%s", ctx.Chain.DumpAccounts())
 		require.EqualValues(t, solo.Saldo, user.Balance())
-		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Account()))
 		require.EqualValues(t, 0, ctx.Balance(ctx.Originator()))
 		require.EqualValues(t, 0, ctx.Balance(user))
 		originatorBalanceReducedBy(ctx, w, 2)
@@ -185,7 +185,7 @@ func TestDoPanicUserFee(t *testing.T) {
 
 		t.Logf("dump accounts:\n%s", ctx.Chain.DumpAccounts())
 		require.EqualValues(t, solo.Saldo, user.Balance())
-		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Account()))
 		require.EqualValues(t, 0, ctx.Balance(ctx.Originator()))
 		require.EqualValues(t, 0, ctx.Balance(user))
 		originatorBalanceReducedBy(ctx, w, 3)
@@ -197,7 +197,7 @@ func TestDoPanicUserFee(t *testing.T) {
 
 		t.Logf("dump accounts:\n%s", ctx.Chain.DumpAccounts())
 		require.EqualValues(t, solo.Saldo-10, user.Balance())
-		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Account()))
 		require.EqualValues(t, 0, ctx.Balance(ctx.Originator()))
 		require.EqualValues(t, 0, ctx.Balance(user))
 		originatorBalanceReducedBy(ctx, w, 3)
@@ -212,7 +212,7 @@ func TestRequestToView(t *testing.T) {
 
 		t.Logf("dump accounts:\n%s", ctx.Chain.DumpAccounts())
 		require.EqualValues(t, solo.Saldo, user.Balance())
-		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Account()))
 		require.EqualValues(t, 0, ctx.Balance(ctx.Originator()))
 		require.EqualValues(t, 0, ctx.Balance(user))
 		originatorBalanceReducedBy(ctx, w, 2)
@@ -231,7 +231,7 @@ func TestRequestToView(t *testing.T) {
 
 		t.Logf("dump accounts:\n%s", ctx.Chain.DumpAccounts())
 		require.EqualValues(t, solo.Saldo, user.Balance())
-		require.EqualValues(t, 0, ctx.Balance(ctx.Agent()))
+		require.EqualValues(t, 0, ctx.Balance(ctx.Account()))
 		require.EqualValues(t, 0, ctx.Balance(ctx.Originator()))
 		require.EqualValues(t, 0, ctx.Balance(user))
 		originatorBalanceReducedBy(ctx, w, 2)

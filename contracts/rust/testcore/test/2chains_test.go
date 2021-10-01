@@ -29,26 +29,26 @@ func Test2Chains(t *testing.T) {
 		require.NoError(t, ctx2.Err)
 
 		require.EqualValues(t, 0, ctx1.Balance(user))
-		require.EqualValues(t, 0, ctx1.Balance(ctx1.Agent()))
-		require.EqualValues(t, 0, ctx1.Balance(ctx2.Agent()))
+		require.EqualValues(t, 0, ctx1.Balance(ctx1.Account()))
+		require.EqualValues(t, 0, ctx1.Balance(ctx2.Account()))
 		chainAccountBalances(ctx1, w, 2, 2)
 
 		require.EqualValues(t, 0, ctx2.Balance(user))
-		require.EqualValues(t, 0, ctx2.Balance(ctx1.Agent()))
-		require.EqualValues(t, 0, ctx2.Balance(ctx2.Agent()))
+		require.EqualValues(t, 0, ctx2.Balance(ctx1.Account()))
+		require.EqualValues(t, 0, ctx2.Balance(ctx2.Account()))
 		chainAccountBalances(ctx2, w, 2, 2)
 
-		deposit(t, ctx1, user, ctx2.Agent(), 42)
+		deposit(t, ctx1, user, ctx2.Account(), 42)
 		require.EqualValues(t, solo.Saldo-42, user.Balance())
 
 		require.EqualValues(t, 0, ctx1.Balance(user))
-		require.EqualValues(t, 0, ctx1.Balance(ctx1.Agent()))
-		require.EqualValues(t, 0+42, ctx1.Balance(ctx2.Agent()))
+		require.EqualValues(t, 0, ctx1.Balance(ctx1.Account()))
+		require.EqualValues(t, 0+42, ctx1.Balance(ctx2.Account()))
 		chainAccountBalances(ctx1, w, 2, 2+42)
 
 		require.EqualValues(t, 0, ctx2.Balance(user))
-		require.EqualValues(t, 0, ctx2.Balance(ctx1.Agent()))
-		require.EqualValues(t, 0, ctx2.Balance(ctx2.Agent()))
+		require.EqualValues(t, 0, ctx2.Balance(ctx1.Account()))
+		require.EqualValues(t, 0, ctx2.Balance(ctx2.Account()))
 		chainAccountBalances(ctx2, w, 2, 2)
 
 		f := testcore.ScFuncs.WithdrawToChain(ctx2.Sign(user))
@@ -63,14 +63,14 @@ func Test2Chains(t *testing.T) {
 
 		t.Logf("dump chain1 accounts:\n%s", ctx1.Chain.DumpAccounts())
 		require.EqualValues(t, 0, ctx1.Balance(user))
-		require.EqualValues(t, 0, ctx1.Balance(ctx1.Agent()))
-		require.EqualValues(t, 0+42-42, ctx1.Balance(ctx2.Agent()))
+		require.EqualValues(t, 0, ctx1.Balance(ctx1.Account()))
+		require.EqualValues(t, 0+42-42, ctx1.Balance(ctx2.Account()))
 		chainAccountBalances(ctx1, w, 2, 2+42-42)
 
 		t.Logf("dump chain2 accounts:\n%s", ctx2.Chain.DumpAccounts())
 		require.EqualValues(t, 0, ctx2.Balance(user))
-		require.EqualValues(t, 0, ctx2.Balance(ctx1.Agent()))
-		require.EqualValues(t, 1+42, ctx2.Balance(ctx2.Agent()))
+		require.EqualValues(t, 0, ctx2.Balance(ctx1.Account()))
+		require.EqualValues(t, 1+42, ctx2.Balance(ctx2.Account()))
 		chainAccountBalances(ctx2, w, 2, 2+1+42)
 	})
 }

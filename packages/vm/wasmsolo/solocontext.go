@@ -50,11 +50,12 @@ var (
 	GoDebug                           = flag.Bool("godebug", false, "debug go smart contract code")
 )
 
-// NewSoloContext can be used to create a SoloContext associated with a smart contract with
-// minimal information and will verify successful creation before returning ctx.
+// NewSoloContext can be used to create a SoloContext associated with a smart contract
+// with minimal information and will verify successful creation before returning ctx.
 // It will start a default chain "chain1" before initializing the smart contract.
-// It takes the scName and onLoad() function for the contract and optionally
-// an init.Func initialized with the parameters to pass to the contract's init() function.
+// It takes the scName and onLoad() function associated with the contract.
+// Optionally, an init.Func that has been initialized with the parameters to pass to
+// the contract's init() function can be specified.
 // Unless you want to use a different chain than the default "chain1" this will be your
 // function of choice to set up a smart contract for your tests
 func NewSoloContext(t *testing.T, scName string, onLoad func(), init ...*wasmlib.ScInitFunc) *SoloContext {
@@ -63,12 +64,16 @@ func NewSoloContext(t *testing.T, scName string, onLoad func(), init ...*wasmlib
 	return ctx
 }
 
-// NewSoloContextForChain can be used to create a SoloContext associated with a smart contract on a particular chain.
-// When chain is nil the function will start a default chain "chain1" before initializing the smart contract.
-// It takes the scName and onLoad() function for the contract and optionally
-// an init.Func initialized with the parameters to pass to the contract's init() function.
+// NewSoloContextForChain can be used to create a SoloContext associated with a smart contract
+// on a particular chain.  When chain is nil the function will start a default chain "chain1"
+// before initializing the smart contract.
+// When creator is nil the creator will be the chain originator
+// It takes the scName and onLoad() function associated with the contract.
+// Optionally, an init.Func that has been initialized with the parameters to pass to
+// the contract's init() function can be specified.
 // You can check for any error that occurred by checking the ctx.Err member.
-func NewSoloContextForChain(t *testing.T, chain *solo.Chain, creator *SoloAgent, scName string, onLoad func(), init ...*wasmlib.ScInitFunc) *SoloContext {
+func NewSoloContextForChain(t *testing.T, chain *solo.Chain, creator *SoloAgent, scName string, onLoad func(),
+	init ...*wasmlib.ScInitFunc) *SoloContext {
 	if chain == nil {
 		chain = StartChain(t, "chain1")
 	}
@@ -98,12 +103,16 @@ func NewSoloContextForCore(t *testing.T, chain *solo.Chain, scName string, onLoa
 	return ctx.init(onLoad)
 }
 
-// NewSoloContextForNative can be used to create a SoloContext associated with a smart contract on a particular chain.
-// When chain is nil the function will start a default chain "chain1" before initializing the smart contract.
-// It takes the scName and onLoad() function for the contract and optionally
-// an init.Func initialized with the parameters to pass to the contract's init() function.
+// NewSoloContextForNative can be used to create a SoloContext associated with a native smart contract
+// on a particular chain. When chain is nil the function will start a default chain "chain1" before
+// deploying and initializing the smart contract.
+// When creator is nil the creator will be the chain originator
+// It takes the scName, onLoad() function, and processor associated with the contract.
+// Optionally, an init.Func that has been initialized with the parameters to pass to
+// the contract's init() function can be specified.
 // You can check for any error that occurred by checking the ctx.Err member.
-func NewSoloContextForNative(t *testing.T, chain *solo.Chain, creator *SoloAgent, scName string, onLoad func(), proc *coreutil.ContractProcessor, init ...*wasmlib.ScInitFunc) *SoloContext {
+func NewSoloContextForNative(t *testing.T, chain *solo.Chain, creator *SoloAgent, scName string, onLoad func(),
+	proc *coreutil.ContractProcessor, init ...*wasmlib.ScInitFunc) *SoloContext {
 	if chain == nil {
 		chain = StartChain(t, "chain1")
 	}
@@ -125,7 +134,7 @@ func NewSoloContextForNative(t *testing.T, chain *solo.Chain, creator *SoloAgent
 	return ctx.init(onLoad)
 }
 
-// TODO can we make upload work through off-ledger request instead?
+// TODO can we make upload work through an off-ledger request instead?
 // that way we can get rid of all the extra token code when checking balances
 
 func deploy(chain *solo.Chain, keyPair *ed25519.KeyPair, scName string, onLoad func(), params ...interface{}) error {
@@ -138,20 +147,12 @@ func deploy(chain *solo.Chain, keyPair *ed25519.KeyPair, scName string, onLoad f
 		return chain.DeployContract(keyPair, scName, hprog, params...)
 	}
 
-	// wasmproc.GoWasmVM = NewWasmTimeJavaVM()
-	// wasmproc.GoWasmVM = NewWartVM()
-	// wasmproc.GoWasmVM = NewWasmerVM()
 	wasmFile := scName + "_bg.wasm"
 	exists, _ := util.ExistsFilePath("../pkg/" + wasmFile)
 	if exists {
 		wasmFile = "../pkg/" + wasmFile
 	}
 	return chain.DeployWasmContract(keyPair, scName, wasmFile, params...)
-	//hprog, err := chain.UploadWasmFromFile(keyPair, wasmFile)
-	//if err != nil {
-	//	return err
-	//}
-	//return chain.DeployContract(keyPair, scName, hprog, params...)
 }
 
 // StartChain starts a new chain named chainName.
@@ -169,23 +170,23 @@ func StartChain(t *testing.T, chainName string, env ...*solo.Solo) *solo.Chain {
 	return soloEnv.NewChain(nil, chainName)
 }
 
-func (ctx *SoloContext) AccountID() wasmlib.ScAgentID {
-	return ctx.Agent().ScAgentID()
-}
-
-// AdvanceClockBy is used to forward the internal clock by the provided step duration.
-func (ctx *SoloContext) AdvanceClockBy(step time.Duration) {
-	ctx.Chain.Env.AdvanceClockBy(step)
-}
-
-// Agent returns a SoloAgent for the smart contract associated with ctx
-func (ctx *SoloContext) Agent() *SoloAgent {
+// Account returns a SoloAgent for the smart contract associated with ctx
+func (ctx *SoloContext) Account() *SoloAgent {
 	return &SoloAgent{
 		Env:     ctx.Chain.Env,
 		Pair:    nil,
 		address: ctx.Chain.ChainID.AsAddress(),
 		hname:   iscp.Hn(ctx.scName),
 	}
+}
+
+func (ctx *SoloContext) AccountID() wasmlib.ScAgentID {
+	return ctx.Account().ScAgentID()
+}
+
+// AdvanceClockBy is used to forward the internal clock by the provided step duration.
+func (ctx *SoloContext) AdvanceClockBy(step time.Duration) {
+	ctx.Chain.Env.AdvanceClockBy(step)
 }
 
 // Balance returns the account balance of the specified agent on the chain associated with ctx.
@@ -211,10 +212,30 @@ func (ctx *SoloContext) ChainID() wasmlib.ScChainID {
 	return ctx.Convertor.ScChainID(ctx.Chain.ChainID)
 }
 
+func (ctx *SoloContext) ChainOwnerID() wasmlib.ScAgentID {
+	return ctx.Convertor.ScAgentID(ctx.Chain.OriginatorAgentID)
+}
+
+func (ctx *SoloContext) ContractCreator() wasmlib.ScAgentID {
+	return ctx.Creator().ScAgentID()
+}
+
 // ContractExists checks to see if the contract named scName exists in the chain associated with ctx.
 func (ctx *SoloContext) ContractExists(scName string) error {
 	_, err := ctx.Chain.FindContract(scName)
 	return err
+}
+
+// Creator returns a SoloAgent representing the contract creator
+func (ctx *SoloContext) Creator() *SoloAgent {
+	if ctx.creator != nil {
+		return ctx.creator
+	}
+	return ctx.Originator()
+}
+
+func (ctx *SoloContext) EnqueueRequest() {
+	ctx.isRequest = true
 }
 
 func (ctx *SoloContext) Host() wasmlib.ScHost {
@@ -245,26 +266,6 @@ func (ctx *SoloContext) InitViewCallContext() {
 	_ = wasmlib.ConnectHost(ctx.wasmHost)
 }
 
-// NewSoloAgent creates a new SoloAgent with solo.Saldo tokens in its address
-func (ctx *SoloContext) NewSoloAgent() *SoloAgent {
-	return NewSoloAgent(ctx.Chain.Env)
-}
-
-// TODO add context methods that are identical to func context methods
-// which means that Balances, ContractCreator and Minted need to change
-
-// ContractCreator returns a SoloAgent representing the contract creator
-func (ctx *SoloContext) ContractCreator() *SoloAgent {
-	if ctx.creator != nil {
-		return ctx.creator
-	}
-	return ctx.Originator()
-}
-
-func (ctx *SoloContext) EnqueueRequest() {
-	ctx.isRequest = true
-}
-
 // Minted returns the color and amount of newly minted tokens
 func (ctx *SoloContext) Minted() (wasmlib.ScColor, uint64) {
 	t := ctx.Chain.Env.T
@@ -280,6 +281,11 @@ func (ctx *SoloContext) Minted() (wasmlib.ScColor, uint64) {
 	}
 	t.Logf("Minted: amount = %d color = %s", mintedAmount, mintedColor.String())
 	return mintedColor, mintedAmount
+}
+
+// NewSoloAgent creates a new SoloAgent with solo.Saldo tokens in its address
+func (ctx *SoloContext) NewSoloAgent() *SoloAgent {
+	return NewSoloAgent(ctx.Chain.Env)
 }
 
 // OffLedger tells SoloContext to Post() the next request off-ledger
@@ -310,12 +316,19 @@ func (ctx *SoloContext) Transfer() wasmlib.ScTransfers {
 }
 
 // WaitForPendingRequests waits for expectedRequests pending requests to be processed.
+// a negative value indicates the absolute amount of requests
 // The function will wait for maxWait (default 5 seconds) duration before giving up with a timeout.
 // The function returns the false in case of a timeout.
 func (ctx *SoloContext) WaitForPendingRequests(expectedRequests int, maxWait ...time.Duration) bool {
 	_ = wasmlib.ConnectHost(ctx.wasmHostOld)
-	info := ctx.Chain.MempoolInfo()
-	result := ctx.Chain.WaitForRequestsThrough(expectedRequests+info.OutPoolCounter, maxWait...)
+	if expectedRequests > 0 {
+		info := ctx.Chain.MempoolInfo()
+		expectedRequests += info.OutPoolCounter
+	} else {
+		expectedRequests = -expectedRequests
+	}
+
+	result := ctx.Chain.WaitForRequestsThrough(expectedRequests, maxWait...)
 	_ = wasmlib.ConnectHost(ctx.wasmHost)
 	return result
 }
